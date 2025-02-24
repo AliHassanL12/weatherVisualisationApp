@@ -3,16 +3,18 @@
 import cdsapi
 
 client = cdsapi.Client()
-client.retrieve("reanalysis-era5-land",
-    {
-        "variable": "2m_temperature",
-        "year": "2024",
-        "month": "01",
-        "day": "01",
-        "time": "12:00",
-        "format": "netcdf"
-    },
-    "test.nc"
-)
 
-print("Download complete!")
+dataset = 'reanalysis-era5-pressure-levels'
+request = {
+  'product_type': ['reanalysis'],
+  'variable': ['geopotential'],
+  'year': ['2024'],
+  'month': ['03'],
+  'day': ['01'],
+  'time': ['13:00'],
+  'pressure_level': ['1000'],
+  'data_format': 'grib',
+}
+target = 'download.grib'
+
+client.retrieve(dataset, request, target)
