@@ -5,9 +5,9 @@ import cdsapi
 dataset = "reanalysis-era5-pressure-levels"
 request = {
     "product_type": ["reanalysis"],
-    'year': ['2019'],  # Change year to 2025
-    'month': ['04'],   # Change month to 02 (February)
-    'day': ['20'],     # Change day to 20 (valid date)
+    'year': ['2019'],  
+    'month': ['04'],   
+    'day': ['20'],    
     "data_format": "grib",
     "download_format": "unarchived"
 }
