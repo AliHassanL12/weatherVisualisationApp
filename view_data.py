@@ -1,5 +1,5 @@
 import xarray as xr
-import matplotlib.pyplot as plt
+import json
 
 ds = xr.open_dataset('./downloads/ERA5_L1_2001.nc')
 
@@ -54,5 +54,8 @@ dataDict = {
     'tcwv': tcwvDict
 }
 
+# Serialize data dictionary and now we can send this dataJson object over as a part of an HTTP response
+
+dataJson = json.dumps(dataDict)
 
 
