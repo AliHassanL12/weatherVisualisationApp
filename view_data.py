@@ -11,7 +11,6 @@ subset = ds.sel(
     longitude=slice(10, 20)   
 )
 
-print(subset)
 
 '''
 Front-end requires data in a serializable format. The netCDF file we have loaded,
@@ -58,4 +57,6 @@ dataDict = {
 
 dataJson = json.dumps(dataDict)
 
+# Problem with Time object, json doesnt natively support it
 
+# Need to convert datetime object to a string format using JSON that can be serialized 
