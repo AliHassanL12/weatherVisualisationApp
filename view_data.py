@@ -1,5 +1,7 @@
 import xarray as xr
 import json
+import datetime as datetime
+import numpy as np
 
 ds = xr.open_dataset('./downloads/ERA5_L1_2001.nc')
 
@@ -10,6 +12,9 @@ subset = ds.sel(
     latitude=slice(40, 50),   
     longitude=slice(10, 20)   
 )
+
+print(type(ds['time'].values[0]))  # Check the type of the first time value
+
 
 
 '''
@@ -53,10 +58,17 @@ dataDict = {
     'tcwv': tcwvDict
 }
 
+#Method to serialise datetime64 and datetime objects, by converting them to a standardised format
+
+def dateTimeSerializer(obj):
+    if isinstance(obj, np.datetime64):
+        return str(obj)
+    elif isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    raise TypeError(f'type {type(obj)} is not serializable.')
+
+
 # Serialize data dictionary and now we can send this dataJson object over as a part of an HTTP response
 
-dataJson = json.dumps(dataDict)
+dataJson = json.dumps(dataDict, default=dateTimeSerializer)
 
-# Problem with Time object, json doesnt natively support it
-
-# Need to convert datetime object to a string format using JSON that can be serialized 
