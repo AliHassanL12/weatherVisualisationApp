@@ -15,6 +15,7 @@ const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load(earthImage);
 
 const material = new THREE.MeshBasicMaterial({ map: earthTexture });
+  
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
 
