@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import earthImage from './images/earthmap1k.jpg';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import '../css/styles.css';
+
 const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new THREE.Scene();
@@ -31,7 +32,7 @@ const material = new THREE.MeshStandardMaterial({
     map: earthTexture,
 });
   
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
 scene.add(ambientLight);
 
 //Set direction from which light is coming
@@ -41,12 +42,10 @@ earthGroup.add(directionalLight);
 const sphere = new THREE.Mesh(geometry, material);
 earthGroup.add(sphere);
 
-
-
 // animate the sphere rotating
 function animate() {
     requestAnimationFrame(animate);
-    earthGroup.rotation.y += 0.001; 
+    earthGroup.rotation.y += 0.003; 
     renderer.render(scene, camera);
 }
 animate();
