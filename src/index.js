@@ -13,6 +13,12 @@ const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(w, h);
 document.body.appendChild(renderer.domElement);
 
+// set the axis of the earth
+
+const earthGroup = new THREE.Group();
+scene.add(earthGroup);
+earthGroup.rotation.z = -23*4 * Math.PI / 180; // Earth's axial tilt (23.4 degrees) in radians
+
 new OrbitControls(camera, renderer.domElement);
 
 // create spehere and add to the scene
@@ -23,7 +29,6 @@ const earthTexture = textureLoader.load(earthImage);
 
 const material = new THREE.MeshStandardMaterial({ 
     map: earthTexture,
-    flatshading: true, 
 });
   
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -32,16 +37,16 @@ scene.add(ambientLight);
 //Set direction from which light is coming
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(5, 5, 5);
-scene.add(directionalLight);
+earthGroup.add(directionalLight);
 const sphere = new THREE.Mesh(geometry, material);
-scene.add(sphere);
+earthGroup.add(sphere);
 
 
 
 // animate the sphere rotating
 function animate() {
     requestAnimationFrame(animate);
-    sphere.rotation.y += 0.001; 
+    earthGroup.rotation.y += 0.001; 
     renderer.render(scene, camera);
 }
 animate();
