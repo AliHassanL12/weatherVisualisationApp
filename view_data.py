@@ -1,7 +1,4 @@
 import xarray as xr
-import json
-import datetime as datetime
-import numpy as np
 from flask import jsonify
 
 ds = xr.open_dataset('./downloads/ERA5_L1_2001.nc')
@@ -10,8 +7,7 @@ ds = xr.open_dataset('./downloads/ERA5_L1_2001.nc')
 
 def getWeatherData():
     subset = ds.sel(
-    time=slice('2001-01-01', '2001-03-30'),
-    latitude=slice(40, 50),   
+    time=slice('2001-01-01', '2001-03-30'), 
     longitude=slice(10, 20)   
     )
 
@@ -26,6 +22,4 @@ def getWeatherData():
         'tcwv': subset['tcwv'].to_dict()
         }
     return jsonify(dataDict) # Jsonify internally handles conversion of common types like datetime objects automatically
-
-
 
