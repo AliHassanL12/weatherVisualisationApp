@@ -10,16 +10,15 @@ def getWeatherData():
     time=slice('2001-01-01', '2001-03-30'), 
     longitude=slice(10, 20)   
     )
-
     # Convert dataset variables to a dictionary format 
 
     dataDict = {
-        't2m': subset['t2m'].to_dict(),
-        'e': subset['e'].to_dict(),
-        'd2m': subset['d2m'].to_dict(),
-        'tcc': subset['tcc'].to_dict(),
-        'tp': subset['tp'].to_dict(),
-        'tcwv': subset['tcwv'].to_dict()
+        't2m': subset['t2m'].values.tolist(),
+        'e': subset['e'].values.tolist(),
+        'd2m': subset['d2m'].values.tolist(),
+        'tcc': subset['tcc'].values.tolist(),
+        'tp': subset['tp'].values.tolist(),
+        'tcwv': subset['tcwv'].values.tolist()
         }
     return jsonify(dataDict) # Jsonify internally handles conversion of common types like datetime objects automatically
 
