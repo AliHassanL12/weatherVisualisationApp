@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import earthImage from './images/earthmap1k.jpg';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import '../css/styles.css';
+import { fetchWeatherData } from './fetch-request';
 
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -49,3 +50,5 @@ function animate() {
     renderer.render(scene, camera);
 }
 animate();
+
+fetchWeatherData();
