@@ -1,3 +1,5 @@
+// CORS PROBLEM WITH FETCHING WEATHER DATA
+
 import * as THREE from 'three';
 import earthImage from './images/earthmap1k.jpg';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
