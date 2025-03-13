@@ -26,6 +26,7 @@ earthGroup.rotation.z = -23*4 * Math.PI / 180; // Earth's axial tilt (23.4 degre
 new OrbitControls(camera, renderer.domElement);
 
 // create spehere and add to the scene
+const sphereRadius = 3; 
 const geometry = new THREE.IcosahedronGeometry(3, 14);
 const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load(earthImage);
@@ -51,6 +52,13 @@ function animate() {
     earthGroup.rotation.y += 0.003; 
     renderer.render(scene, camera);
 }
+
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+});
+
 animate();
 
 fetchWeatherData();
