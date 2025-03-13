@@ -3,12 +3,14 @@ from flask import jsonify
 
 ds = xr.open_dataset('./downloads/ERA5_L1_2001.nc')
 
-# Fetches a subset of the weather dataset and returns it as a JSON 
+print(ds)
 
+# Fetches a subset of the weather dataset and returns it as a JSON 
 def getWeatherData():
     subset = ds.sel(
     time=slice('2001-01-01', '2001-03-30'), 
-    longitude=slice(10, 20)   
+    longitude=slice(10, 20),   
+    latitude=slice(30,50)
     )
     # Convert dataset variables to a dictionary format 
 
