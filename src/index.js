@@ -1,10 +1,9 @@
-// CORS PROBLEM WITH FETCHING WEATHER DATA
 
 import * as THREE from 'three';
 import earthImage from './images/test-marble.jpg';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import '../css/styles.css';
-import { fetchWeatherData } from './fetch-request';
+import { fetchWeatherData, convertToCartesian } from './fetch-request';
 
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -26,8 +25,8 @@ earthGroup.rotation.z = -23*4 * Math.PI / 180; // Earth's axial tilt (23.4 degre
 new OrbitControls(camera, renderer.domElement);
 
 // create spehere and add to the scene
-const sphereRadius = 3; 
-const geometry = new THREE.IcosahedronGeometry(3, 14);
+export const sphereRadius = 3; 
+const geometry = new THREE.IcosahedronGeometry(sphereRadius, 14);
 const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load(earthImage);
 
@@ -62,3 +61,6 @@ window.addEventListener('resize', () => {
 animate();
 
 fetchWeatherData();
+
+const point = convertToCartesian(50, 40, 3);
+console.log(point);
