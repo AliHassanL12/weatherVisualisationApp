@@ -25,7 +25,7 @@ export async function fetchWeatherData() {
  * */ 
 
 export function convertToCartesian(lat, lon, radius) {
-    const latRad = (lat * Math.PI) / 180; // Convert to radians
+    const latRad = (lat * Math.PI) / 180; // Convert to radians (our function expect them in this format)
     const lonRad = (lon * Math.PI) / 180; // Convert to radians
 
 
