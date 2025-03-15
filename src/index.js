@@ -18,7 +18,7 @@ document.body.appendChild(renderer.domElement);
 
 // set the axis of the earth
 
-const earthGroup = new THREE.Group();
+export const earthGroup = new THREE.Group();
 scene.add(earthGroup);
 earthGroup.rotation.z = -23*4 * Math.PI / 180; // Earth's axial tilt (23.4 degrees) in radians
 

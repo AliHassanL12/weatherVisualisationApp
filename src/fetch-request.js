@@ -1,3 +1,6 @@
+import { sphereRadius, earthGroup } from ".";
+import * as THREE from 'three';
+
 export async function fetchWeatherData() {
     try {
         const response = await fetch('http://127.0.0.1:5001/getWeatherData');
@@ -6,6 +9,10 @@ export async function fetchWeatherData() {
         };
         const data = await response.json();
         console.log('Weather Data:', data);
+        const latitudes = data.latitudes;
+        const longitudes = data.longitudes;
+        const temperature = data.t2m;
+        plotWeatherPoints(latitudes, longitudes, temperature);
         return data;
     } catch (error) {
         console.error('Problem fetching weather data', error);
@@ -36,3 +43,21 @@ export function convertToCartesian(lat, lon, radius) {
     return { x, y, z }; // returning as an object
 }
 
+function plotWeatherPoints(latitudes, longitudes, dataValues) {
+    for (let i = 0; i < latitudes.length; i++) {
+        const lat = latitudes[i];
+        const lon = longitudes[i];
+        const value = dataValues[i];
+
+
+        const { x, y, z } = convertToCartesian(lat, lon, sphereRadius + 0.05); // technique called object destructuring. Extracts x, y and z from the object returned by the converToCartesian function
+
+        const pointGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+        const pointMaterial = new THREE.MeshStandardMaterial({
+            color: 'red', // CHANGE this later to depend on the data value
+        });
+        const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
+        pointMesh.position.set(x, y, z);
+        earthGroup.add(pointMesh);
+    }
+}
