@@ -61,6 +61,3 @@ window.addEventListener('resize', () => {
 animate();
 
 fetchWeatherData();
-
-const point = convertToCartesian(50, 40, 3);
-console.log(point);

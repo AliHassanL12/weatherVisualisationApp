@@ -9,8 +9,8 @@ ds = xr.open_dataset('./downloads/ERA5_L1_monthly_2001.nc')
 def getWeatherData():
     subset = ds.sel(
     time=slice('2001-01-01', '2001-03-30'), 
-    longitude=slice(10, 20),   
-    latitude=slice(50,30)
+    longitude=slice(10, 15),   
+    latitude=slice(10,5)
     )
     # Convert dataset variables to a dictionary format 
 
