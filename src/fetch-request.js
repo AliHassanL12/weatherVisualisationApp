@@ -8,7 +8,6 @@ export async function fetchWeatherData() {
             throw new Error(`HTTP error! Status: ${response.status}`);
         };
         const data = await response.json();
-        console.log('Weather Data:', data);
         const latitudes = data.latitudes;
         const longitudes = data.longitudes;
         const temperature = data.t2m;
@@ -45,7 +44,7 @@ export function convertToCartesian(lat, lon, radius) {
 
 function plotWeatherPoints(latitudes, longitudes, dataValues) {
     const numInstances = latitudes.length * longitudes.length;
-    const pointGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+    const pointGeometry = new THREE.SphereGeometry(0.03, 4, 4);
     const pointMaterial = new THREE.MeshStandardMaterial({
         color: 'red', // CHANGE this later to depend on the data value
     });
@@ -65,3 +64,6 @@ function plotWeatherPoints(latitudes, longitudes, dataValues) {
         }
     }
 }
+
+// Try changing to low res image 
+// fragment shader-based rendering approach

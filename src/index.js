@@ -1,9 +1,11 @@
 
 import * as THREE from 'three';
 import earthImage from './images/test-marble.jpg';
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { OrbitControls, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
 import '../css/styles.css';
 import { fetchWeatherData, convertToCartesian } from './fetch-request';
+import cloudTextureMap from './images/cloud-texture.png';
+
 
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -26,7 +28,7 @@ new OrbitControls(camera, renderer.domElement);
 
 // create spehere and add to the scene
 export const sphereRadius = 3; 
-const geometry = new THREE.IcosahedronGeometry(sphereRadius, 14);
+const geometry = new THREE.IcosahedronGeometry(sphereRadius, 9);
 const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load(earthImage);
 
@@ -45,6 +47,17 @@ earthGroup.add(directionalLight);
 const sphere = new THREE.Mesh(geometry, material);
 earthGroup.add(sphere);
 
+// Adding cloud layer
+
+const cloudGeometry = new THREE.SphereGeometry(sphereRadius * 1.01, 64, 64) // a bit bigger than art, so envelops
+const cloudTexture = textureLoader.load(cloudTextureMap);
+const cloudMaterial = new THREE.MeshStandardMaterial({
+    map: cloudTexture,
+    transparent: true, 
+    opacity: 0.7,
+})
+const cloudSphere = new THREE.Mesh(cloudGeometry, cloudMaterial);
+earthGroup.add(cloudSphere);
 // animate the sphere rotating
 function animate() {
     requestAnimationFrame(animate);

@@ -10,10 +10,10 @@ def getWeatherData():
     subset = ds.sel(
     time=slice('2001-01-01', '2001-03-30'), 
     longitude=slice(10, 20),   
-    latitude=slice(40,5)
+    latitude=slice(30,5)
     )
     # Convert dataset variables to a dictionary format 
-
+    
     dataDict = {
         'latitudes': subset['latitude'].values.tolist(),  
         'longitudes': subset['longitude'].values.tolist(), 
