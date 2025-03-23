@@ -49,15 +49,30 @@ earthGroup.add(sphere);
 
 // Adding cloud layer
 
-const cloudGeometry = new THREE.SphereGeometry(sphereRadius * 1.01, 64, 64) // a bit bigger than art, so envelops
+
 const cloudTexture = textureLoader.load(cloudTextureMap);
-const cloudMaterial = new THREE.MeshStandardMaterial({
-    map: cloudTexture,
-    transparent: true, 
-    opacity: 0.7,
-})
-const cloudSphere = new THREE.Mesh(cloudGeometry, cloudMaterial);
-earthGroup.add(cloudSphere);
+
+const cloudGroup = new THREE.Group();
+scene.add(cloudGroup);
+
+const numLayers = 3;
+
+for (let i=0; i < numLayers; i++) {
+    const layerRadius = sphereRadius * (1.01 + i * 0.005);
+    const layerOpacity = 0.7 - i * 0.1;
+    const cloudGeometry = new THREE.SphereGeometry(layerRadius, 64, 64);
+    const cloudMaterial = new THREE.MeshStandardMaterial({
+        map: cloudTexture,
+        transparent: true,
+        opacity: layerOpacity,
+        depthWrite: false,
+    });
+
+    const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
+    cloudGroup.add(cloudMesh);
+}
+
+earthGroup.add(cloudGroup);
 // animate the sphere rotating
 function animate() {
     requestAnimationFrame(animate);

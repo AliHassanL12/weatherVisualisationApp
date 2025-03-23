@@ -3,7 +3,7 @@ from flask import jsonify
 
 ds = xr.open_dataset('./downloads/ERA5_L1_monthly_2001.nc')
 
-
+print(ds)
 
 # Fetches a subset of the weather dataset and returns it as a JSON 
 def getWeatherData():
