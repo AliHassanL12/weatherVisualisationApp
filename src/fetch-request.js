@@ -8,13 +8,10 @@ export async function fetchWeatherData() {
             throw new Error(`HTTP error! Status: ${response.status}`);
         };
         const data = await response.json();
-        const latitudes = data.latitudes;
-        const longitudes = data.longitudes;
-        const temperature = data.t2m;
-        plotWeatherPoints(latitudes, longitudes, temperature);
         return data;
     } catch (error) {
         console.error('Problem fetching weather data', error);
+        return null;
     };
 };
 
@@ -42,28 +39,6 @@ export function convertToCartesian(lat, lon, radius) {
     return { x, y, z }; // returning as an object
 }
 
-function plotWeatherPoints(latitudes, longitudes, dataValues) {
-    const numInstances = latitudes.length * longitudes.length;
-    const pointGeometry = new THREE.SphereGeometry(0.03, 4, 4);
-    const pointMaterial = new THREE.MeshStandardMaterial({
-        color: 'red', // CHANGE this later to depend on the data value
-    });
-    const instancedMesh = new THREE.InstancedMesh(pointGeometry, pointMaterial, numInstances);
-    earthGroup.add(instancedMesh);
-    const temp = new THREE.Object3D();
-    let index = 0;
-    for (let i = 0; i < latitudes.length; i++) {
-        for (let j = 0; j < longitudes.length; j++) {
-            const lat = latitudes[i];
-            const lon = longitudes[j];
-            const { x, y, z } = convertToCartesian(lat, lon, sphereRadius + 0.05); // technique called object destructuring. Extracts x, y and z from the object returned by the converToCartesian function
 
-            temp.position.set(x, y, z);
-            temp.updateMatrix();
-            instancedMesh.setMatrixAt(index++, temp.matrix);
-        }
-    }
-}
+    
 
-// Try changing to low res image 
-// fragment shader-based rendering approach

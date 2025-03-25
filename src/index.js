@@ -1,91 +1,38 @@
-
-import * as THREE from 'three';
-import earthImage from './images/test-marble.jpg';
-import { OrbitControls, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
 import '../css/styles.css';
-import { fetchWeatherData, convertToCartesian } from './fetch-request';
-import cloudTextureMap from './images/cloud-texture.png';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createEarth } from './earth';
+import { setupScene } from './scene'; 
 
+const { scene, camera, renderer } = setupScene();
 
-const w = window.innerWidth;
-const h = window.innerHeight;
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 5;
-const renderer = new THREE.WebGLRenderer({antialias: true});
-
-// set canvas size to full screen size 
-renderer.setSize(w, h);
-document.body.appendChild(renderer.domElement);
-
-// set the axis of the earth
-
-export const earthGroup = new THREE.Group();
-scene.add(earthGroup);
-earthGroup.rotation.z = -23*4 * Math.PI / 180; // Earth's axial tilt (23.4 degrees) in radians
-
-new OrbitControls(camera, renderer.domElement);
-
-// create spehere and add to the scene
-export const sphereRadius = 3; 
-const geometry = new THREE.IcosahedronGeometry(sphereRadius, 9);
-const textureLoader = new THREE.TextureLoader();
-const earthTexture = textureLoader.load(earthImage);
-
-
-const material = new THREE.MeshStandardMaterial({ 
-    map: earthTexture,
-});
-  
+// Add ambient and directional lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
 scene.add(ambientLight);
 
-//Set direction from which light is coming
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(5, 5, 5);
-earthGroup.add(directionalLight);
-const sphere = new THREE.Mesh(geometry, material);
-earthGroup.add(sphere);
+scene.add(directionalLight);
 
-// Adding cloud layer
+// Create Earth and add to scene
+const textureLoader = new THREE.TextureLoader();
+const earthGroup = createEarth(textureLoader);
+scene.add(earthGroup);
 
+// Orbit Controls
+new OrbitControls(camera, renderer.domElement);
 
-const cloudTexture = textureLoader.load(cloudTextureMap);
-
-const cloudGroup = new THREE.Group();
-scene.add(cloudGroup);
-
-const numLayers = 3;
-
-for (let i=0; i < numLayers; i++) {
-    const layerRadius = sphereRadius * (1.01 + i * 0.005);
-    const layerOpacity = 0.7 - i * 0.1;
-    const cloudGeometry = new THREE.SphereGeometry(layerRadius, 64, 64);
-    const cloudMaterial = new THREE.MeshStandardMaterial({
-        map: cloudTexture,
-        transparent: true,
-        opacity: layerOpacity,
-        depthWrite: false,
-    });
-
-    const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
-    cloudGroup.add(cloudMesh);
-}
-
-earthGroup.add(cloudGroup);
-// animate the sphere rotating
-function animate() {
-    requestAnimationFrame(animate);
-    earthGroup.rotation.y += 0.003; 
-    renderer.render(scene, camera);
-}
-
+// Handle window resize
 window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 });
 
+// Animate scene
+function animate() {
+  requestAnimationFrame(animate);
+  earthGroup.rotation.y += 0.003;
+  renderer.render(scene, camera);
+}
 animate();
-
-fetchWeatherData();
