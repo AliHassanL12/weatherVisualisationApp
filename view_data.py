@@ -1,29 +1,19 @@
 import xarray as xr
 from flask import jsonify
 
-ds = xr.open_dataset('./downloads/ERA5_L1_monthly_2001.nc')
+ds = xr.open_dataset('./downloads/era5_cloud_structure_2020.nc')
 
 print(ds)
-
-# Fetches a subset of the weather dataset and returns it as a JSON 
+ 
 def getWeatherData():
-    subset = ds.sel(
-    time=slice('2001-01-01', '2001-03-30'), 
-    longitude=slice(10, 20),   
-    latitude=slice(30,5)
-    )
-    # Convert dataset variables to a dictionary format 
-    
-    dataDict = {
-        'latitudes': subset['latitude'].values.tolist(),  
-        'longitudes': subset['longitude'].values.tolist(), 
-        't2m': subset['t2m'].values.tolist(),
-        'e': subset['e'].values.tolist(),
-        'd2m': subset['d2m'].values.tolist(),
-        'tcc': subset['tcc'].values.tolist(),
-        'tp': subset['tp'].values.tolist(),
-        'tcwv': subset['tcwv'].values.tolist()
-        }
-    return jsonify(dataDict) # Jsonify internally handles conversion of common types like datetime objects automatically
+    # Cloud Liquid at 500 hPa on January 1st 2020
+    data = ds['clwc'].sel(valid_time='2020-01-01')
+
+    # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
+    downsampled = data.coarsen(latitude=8, longitude=8, boundary='trim').mean()
+
+    # Now convert the downsample xarray.DataArray to a NumpyArray and then turn it into a python list of lists
+    array = downsampled.values.tolist()
+    return jsonify(array) # Jsonify internally handles conversion of common types like datetime objects automatically
 
 
