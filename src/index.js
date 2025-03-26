@@ -35,7 +35,7 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
   const cloudTexture3D = create3DTextureFromData(flatData, shape);
 
   // Create a cube slightly bigger than Earth to hold the cloud volume
-  const cloudBox = new THREE.BoxGeometry(6, 6, 6); // Earth is roughly radius 3.5, so this fits around
+  const cloudBox = new THREE.BoxGeometry(7, 7, 7); // Earth is roughly radius 3.5, so this fits around
 
   const cloudMaterial = new THREE.ShaderMaterial({
     uniforms: {
@@ -62,14 +62,14 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
       varying vec3 v_pos;
 
       vec3 toUVW(vec3 p) {
-        return (p + vec3(3.5)) / 6.0;
+        return (p + vec3(3.5)) / 7.0;
       }
 
       void main() {
         vec3 rayOrigin = v_pos;
         vec3 rayDir = normalize(v_pos - u_cameraPos);
 
-        float stepSize = 0.05;
+        float stepSize = 0.04;
         vec3 rayPos = rayOrigin;
         float accumulated = 0.0;
 
@@ -79,21 +79,21 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
             break; // if outside volume, exit
           }
           float density = texture(u_data, uvw).r;
-          density *= 600000.0;
-          density = smoothstep(0.0, 0.1, density);
+          density *= 900000.0;
+          density = smoothstep(0.0, 0.08, density);
 
           // fade out towards edges to remove cubey look
           float distFromCenter = length(rayPos) / 3.5;
-          float sphericalFade = smoothstep(1.0, 0.7, distFromCenter);
+          float sphericalFade = smoothstep(1.0, 0.0, distFromCenter);
           density *= sphericalFade;
 
-          accumulated += density * 0.03; // accumulated opacity
+          accumulated += density * 0.12; // accumulated opacity
           if (accumulated >= 1.0) break;
 
           rayPos += rayDir * stepSize;
           }
 
-          gl_FragColor = vec4(vec3(1.0), accumulated * 0.5); // white cloud
+          gl_FragColor = vec4(vec3(1.0), accumulated * 0.7); // white cloud
         }
     `,
     transparent: true,
