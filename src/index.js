@@ -69,8 +69,7 @@ fetchWeatherData().then(data => {
             for (let j = 0; j < numLon; j++) {
                 //get data value at [p][i][j]
                 const value = clwcData[p][i][j];
-                if (value < 1e-8) continue;
-    
+        
                 const lat = startLat - i * latStep;
                 const lon = startLon + j * lonStep;
 
