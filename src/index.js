@@ -32,21 +32,20 @@ window.addEventListener('resize', () => {
 });
 
 fetchRawCloudData().then(({ data: flatData, shape }) => {
-  console.log(flatData.length, shape)
   const cloudTexture3D = create3DTextureFromData(flatData, shape);
-  console.log(cloudTexture3D);
-  const cloudBox = new THREE.BoxGeometry(7, 7, 7); // we make it a bit bigger than earth
-  
+
+  // Create a cube slightly bigger than Earth to hold the cloud volume
+  const cloudBox = new THREE.BoxGeometry(6, 6, 6); // Earth is roughly radius 3.5, so this fits around
+
   const cloudMaterial = new THREE.ShaderMaterial({
     uniforms: {
       u_data: { value: cloudTexture3D },
       u_size: { value: new THREE.Vector3(...shape) },
-      u_cameraPos: { value: camera.position },
-      u_density: { value: 2.5 },
     },
     vertexShader: `
       varying vec3 v_pos;
       void main() {
+        // Send position to fragment shader
         v_pos = position;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
@@ -54,24 +53,27 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
     fragmentShader: `
       precision highp float;
       precision highp sampler3D;
+
       uniform sampler3D u_data;
       uniform vec3 u_size;
       varying vec3 v_pos;
 
       void main() {
-        vec3 uvw = (v_pos + vec3(3.25)) / 7.0; // normalize to 0-1
-        float density = texture(u_data, uvw).r * 400000.0;
-        density = smoothstep(0.0, 0.1, density);
-        gl_FragColor = vec4(vec3(1.0), density * 0.5); // white clouds
+        vec3 uvw = (v_pos + vec3(3.5)) / 7.0;
+        float val = texture(u_data, uvw).r;
+        val *= 400000.0;
+        val = smoothstep(0.0, 0.1, val);
+        gl_FragColor = vec4(1.0, 1.0, 1.0, val * 0.5); // solid red semi-transparent
       }
     `,
     transparent: true,
     depthWrite: false,
   });
-  
+
   const cloudMesh = new THREE.Mesh(cloudBox, cloudMaterial);
   scene.add(cloudMesh);
-})
+});
+
 // Animate scene
 function animate() {
   requestAnimationFrame(animate);
