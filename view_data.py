@@ -3,10 +3,8 @@ from flask import jsonify
 
 ds = xr.open_dataset('./downloads/era5_cloud_structure_2020.nc')
 
-print(ds)
- 
 def getWeatherData():
-    # Cloud Liquid at 500 hPa on January 1st 2020
+    # Cloud Liquid on January 2020
     data = ds['clwc'].sel(valid_time='2020-01-01')
 
     # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end

@@ -1,5 +1,3 @@
-import { sphereRadius } from './earth';
-import * as THREE from 'three';
 
 export async function fetchWeatherData() {
     try {
