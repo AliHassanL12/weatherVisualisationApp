@@ -31,8 +31,9 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
 });
 
-fetchRawCloudData().then(({ data: flatData, shape }) => {
-  const cloudTexture3D = create3DTextureFromData(flatData, shape);
+fetchRawCloudData().then(({ clwc, ciwc, shape }) => {
+  const combined = clwc.map((v, i) => v + ciwc[i]);
+  const cloudTexture3D = create3DTextureFromData(combined, shape);
 
   // Create a cube slightly bigger than Earth to hold the cloud volume
   const cloudBox = new THREE.BoxGeometry(7, 7, 7); // Earth is roughly radius 3.5, so this fits around
