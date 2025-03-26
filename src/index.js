@@ -63,7 +63,11 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
         float val = texture(u_data, uvw).r;
         val *= 400000.0;
         val = smoothstep(0.0, 0.1, val);
-        gl_FragColor = vec4(1.0, 1.0, 1.0, val * 0.5); // solid red semi-transparent
+
+        // let's reduce the transparency near the edges to give a rounder look
+        float distFromCenter = length(v_pos) / 3.5; // normalise distance
+        float fade = smoothstep(1.0, 0.7, distFromCenter);
+        gl_FragColor = vec4(vec3(1.0), val * 0.5 * fade);
       }
     `,
     transparent: true,
