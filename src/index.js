@@ -31,8 +31,46 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
 });
 
-fetchRawCloudData().then(({ data, shape }) => {
-  const texture = create3DTextureFromData(data, shape);
+fetchRawCloudData().then(({ data: flatData, shape }) => {
+  console.log(flatData.length, shape)
+  const cloudTexture3D = create3DTextureFromData(flatData, shape);
+  console.log(cloudTexture3D);
+  const cloudBox = new THREE.BoxGeometry(7, 7, 7); // we make it a bit bigger than earth
+  
+  const cloudMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      u_data: { value: cloudTexture3D },
+      u_size: { value: new THREE.Vector3(...shape) },
+      u_cameraPos: { value: camera.position },
+      u_density: { value: 2.5 },
+    },
+    vertexShader: `
+      varying vec3 v_pos;
+      void main() {
+        v_pos = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      precision highp sampler3D;
+      uniform sampler3D u_data;
+      uniform vec3 u_size;
+      varying vec3 v_pos;
+
+      void main() {
+        vec3 uvw = (v_pos + vec3(3.25)) / 7.0; // normalize to 0-1
+        float density = texture(u_data, uvw).r * 400000.0;
+        density = smoothstep(0.0, 0.1, density);
+        gl_FragColor = vec4(vec3(1.0), density * 0.5); // white clouds
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+  });
+  
+  const cloudMesh = new THREE.Mesh(cloudBox, cloudMaterial);
+  scene.add(cloudMesh);
 })
 // Animate scene
 function animate() {
