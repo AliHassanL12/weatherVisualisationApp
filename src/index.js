@@ -41,6 +41,7 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
     uniforms: {
       u_data: { value: cloudTexture3D },
       u_size: { value: new THREE.Vector3(...shape) },
+      u_cameraPos: { value: camera.position },
     },
     vertexShader: `
       varying vec3 v_pos;
@@ -56,19 +57,39 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
 
       uniform sampler3D u_data;
       uniform vec3 u_size;
+      uniform vec3 u_cameraPos;
+
       varying vec3 v_pos;
 
-      void main() {
-        vec3 uvw = (v_pos + vec3(3.5)) / 7.0;
-        float val = texture(u_data, uvw).r;
-        val *= 400000.0;
-        val = smoothstep(0.0, 0.1, val);
-
-        // let's reduce the transparency near the edges to give a rounder look
-        float distFromCenter = length(v_pos) / 3.5; // normalise distance
-        float fade = smoothstep(1.0, 0.7, distFromCenter);
-        gl_FragColor = vec4(vec3(1.0), val * 0.5 * fade);
+      vec3 toUVW(vec3 p) {
+        return (p + vec3(3.5)) / 7.0;
       }
+
+      void main() {
+        vec3 rayOrigin = v_pos;
+        vec3 rayDir = normalize(v_pos - u_cameraPos);
+
+        float stepSize = 0.05;
+        vec3 rayPos = rayOrigin;
+        float accumulated = 0.0;
+
+        for (int i=0; i<100; i++){
+          vec3 uvw = toUVW(rayPos);
+          if (any(lessThan(uvw, vec3(0.0))) || any(greaterThan(uvw, vec3(1.0)))) {
+            break; // if outside volume, exit
+          }
+          float density = texture(u_data, uvw).r;
+          density *= 600000.0;
+          density = smoothstep(0.0, 0.1, density);
+
+          accumulated += density * 0.03; // accumulated opacity
+          if (accumulated >= 1.0) break;
+
+          rayPos += rayDir * stepSize;
+          }
+
+          gl_FragColor = vec4(vec3(1.0), accumulated * 0.5); // white cloud
+        }
     `,
     transparent: true,
     depthWrite: false,
