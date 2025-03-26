@@ -62,7 +62,7 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
       varying vec3 v_pos;
 
       vec3 toUVW(vec3 p) {
-        return (p + vec3(3.5)) / 7.0;
+        return (p + vec3(3.5)) / 6.0;
       }
 
       void main() {
@@ -81,6 +81,11 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
           float density = texture(u_data, uvw).r;
           density *= 600000.0;
           density = smoothstep(0.0, 0.1, density);
+
+          // fade out towards edges to remove cubey look
+          float distFromCenter = length(rayPos) / 3.5;
+          float sphericalFade = smoothstep(1.0, 0.7, distFromCenter);
+          density *= sphericalFade;
 
           accumulated += density * 0.03; // accumulated opacity
           if (accumulated >= 1.0) break;
