@@ -42,6 +42,7 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
       u_data: { value: cloudTexture3D },
       u_size: { value: new THREE.Vector3(...shape) },
       u_cameraPos: { value: camera.position },
+      u_lightDir: { value: new THREE.Vector3(1,1,1).normalize()},
     },
     vertexShader: `
       varying vec3 v_pos;
@@ -58,6 +59,7 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
       uniform sampler3D u_data;
       uniform vec3 u_size;
       uniform vec3 u_cameraPos;
+      uniform vec3 u_lightDir;
 
       varying vec3 v_pos;
 
@@ -87,6 +89,17 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
           float sphericalFade = smoothstep(1.0, 0.0, distFromCenter);
           density *= sphericalFade;
 
+          vec3 grad = vec3(
+            texture(u_data, uvw + vec3(0.01, 0.0, 0.0)).r - texture(u_data, uvw - vec3(0.01, 0.0, 0.0)).r,
+            texture(u_data, uvw + vec3(0.01, 0.0, 0.0)).r - texture(u_data, uvw - vec3(0.0, 0.01, 0.0)).r,
+            texture(u_data, uvw + vec3(0.01, 0.0, 0.0)).r - texture(u_data, uvw - vec3(0.0, 0.0, 0.01)).r
+          );
+          vec3 normal = normalize(grad);
+          float light = clamp(dot(normal, u_lightDir), 0.0, 1.0);
+
+          // apply lighting to density
+          density *= light;
+
           accumulated += density * 0.12; // accumulated opacity
           if (accumulated >= 1.0) break;
 
@@ -107,7 +120,6 @@ fetchRawCloudData().then(({ data: flatData, shape }) => {
 // Animate scene
 function animate() {
   requestAnimationFrame(animate);
-  earthGroup.rotation.y += 0.003;
   renderer.render(scene, camera);
 }
 
