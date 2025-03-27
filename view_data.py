@@ -2,6 +2,8 @@ import xarray as xr
 from flask import jsonify
 
 ds = xr.open_dataset('./downloads/era5_cloud_structure_2020.nc')
+print(ds['clwc'].sel(valid_time='2020-09-01')[:, :, 0].values)  # First longitude
+print(ds['clwc'].sel(valid_time='2020-09-01')[:, :, -1].values)  # Last longitude
 
 
 def getWeatherData():
@@ -11,8 +13,17 @@ def getWeatherData():
 
     print(ds['clwc'].dims)
     # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
-    clwc_down = clwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='trim').mean()
-    ciwc_down = ciwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='trim').mean()
+    clwc = clwc.roll(longitude=clwc.sizes['longitude'] // 2, roll_coords=True)
+    ciwc = ciwc.roll(longitude=ciwc.sizes['longitude'] // 2, roll_coords=True)
+
+    clwc['longitude'] = (clwc['longitude'] + 180) % 360 - 180
+    ciwc['longitude'] = (ciwc['longitude'] + 180) % 360 - 180
+    print(clwc['longitude'].values)
+    clwc_down = clwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='pad').mean()
+    ciwc_down = ciwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='pad').mean()
+
+    clwc = clwc.sortby('longitude')
+    ciwc = ciwc.sortby('longitude')
 
     #THREE.Data3DTexture expects 3D data as a flattened 1D array, so we convert to a numpyarray and then flatten. Also WebGL supports float32
     clwc_array = clwc_down.values.astype('float32').flatten().tolist()
