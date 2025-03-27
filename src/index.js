@@ -75,6 +75,7 @@ fetchRawCloudData().then(({ clwc, ciwc, shape }) => {
         float stepSize = 0.04;
         vec3 rayPos = rayOrigin;
         float accumulated = 0.0;
+        float finalDensity = 0.0;
 
         for (int i=0; i<100; i++){
           vec3 uvw = toUVW(rayPos);
@@ -101,13 +102,20 @@ fetchRawCloudData().then(({ clwc, ciwc, shape }) => {
           // apply lighting to density
           density *= light;
 
+          finalDensity = density;
+
           accumulated += density * 0.12; // accumulated opacity
           if (accumulated >= 1.0) break;
 
           rayPos += rayDir * stepSize;
           }
 
-          gl_FragColor = vec4(vec3(1.0), accumulated * 0.7); // white cloud
+          // Map density to color: bluish to white. Low density clouds icy and soft, high density clouds bright 
+          float colorDensity = clamp(finalDensity * 5.0, 0.0, 1.0);
+          vec3 cloudColor = mix(vec3(0.6,0.7,0.9), vec3(1.0), colorDensity);
+          
+          // final color with lighting and accumulation
+          gl_FragColor = vec4(cloudColor, accumulated * 0.7);
         }
     `,
     transparent: true,

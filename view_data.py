@@ -11,14 +11,13 @@ def getWeatherData():
     clwc = ds['clwc'].sel(valid_time='2020-09-01')
     ciwc = ds['ciwc'].sel(valid_time='2020-09-01')
 
-    print(ds['clwc'].dims)
     # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
     clwc = clwc.roll(longitude=clwc.sizes['longitude'] // 2, roll_coords=True)
     ciwc = ciwc.roll(longitude=ciwc.sizes['longitude'] // 2, roll_coords=True)
 
     clwc['longitude'] = (clwc['longitude'] + 180) % 360 - 180
     ciwc['longitude'] = (ciwc['longitude'] + 180) % 360 - 180
-    print(clwc['longitude'].values)
+   
     clwc_down = clwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='pad').mean()
     ciwc_down = ciwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='pad').mean()
 
