@@ -1,23 +1,24 @@
 import xarray as xr
-from flask import jsonify
+from flask import jsonify, request
 
 ds = xr.open_dataset('./downloads/era5_cloud_structure_2020.nc')
-print(ds['clwc'].sel(valid_time='2020-09-01')[:, :, 0].values)  # First longitude
-print(ds['clwc'].sel(valid_time='2020-09-01')[:, :, -1].values)  # Last longitude
 
+print(ds['valid_time'].values)
 
 def getWeatherData():
-    # Cloud Liquid on January 2020
-    clwc = ds['clwc'].sel(valid_time='2020-09-01')
-    ciwc = ds['ciwc'].sel(valid_time='2020-09-01')
 
-    # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
+    month = request.args.get('month', '2020-09-01')
+    # Cloud Liquid on January 2020
+    clwc = ds['clwc'].sel(valid_time=month)
+    ciwc = ds['ciwc'].sel(valid_time=month)
+
     clwc = clwc.roll(longitude=clwc.sizes['longitude'] // 2, roll_coords=True)
     ciwc = ciwc.roll(longitude=ciwc.sizes['longitude'] // 2, roll_coords=True)
 
     clwc['longitude'] = (clwc['longitude'] + 180) % 360 - 180
     ciwc['longitude'] = (ciwc['longitude'] + 180) % 360 - 180
    
+    # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
     clwc_down = clwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='pad').mean()
     ciwc_down = ciwc.coarsen(pressure_level=2, latitude=8, longitude=8, boundary='pad').mean()
 
