@@ -17,5 +17,15 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
     return () => currentIndex;
   }
   
-  export { setupMonthListeners };
+  function setupSliceSlider(cloudMaterial) {
+    const slider = document.getElementById('sliceSlider');
+  
+    slider.addEventListener('input', () => {
+      const value = parseFloat(slider.value);
+      if (cloudMaterial?.uniforms?.u_sliceZ) {
+        cloudMaterial.uniforms.u_sliceZ.value = value;
+      }
+    });
+};  
+  export { setupMonthListeners, setupSliceSlider };
   
