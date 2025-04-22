@@ -95,7 +95,8 @@ function applyCloudTexture(texture, shape, index) {
       u_size: { value: new THREE.Vector3(...shape) },
       u_cameraPos: { value: camera.position },
       u_lightDir: { value: new THREE.Vector3(1,1,1).normalize()},
-      u_sliceZ: { value: 1.0 }
+      u_sliceZ: { value: 1.0 },
+      u_horizontalSlice: {value: false}
     },
     vertexShader: `
       varying vec3 v_pos;
@@ -114,6 +115,7 @@ uniform vec3 u_size;
 uniform vec3 u_cameraPos;
 uniform vec3 u_lightDir;
 uniform float u_sliceZ;
+uniform bool u_horizontalSlice;
 
 varying vec3 v_pos;
 
@@ -133,8 +135,8 @@ void main() {
 
   for (int i = 0; i < 60; i++) {
     vec3 uvw = toUVW(rayPos);
-
-    if (abs(uvw.z - u_sliceZ) > 0.05) {
+    float sliceCoord = u_horizontalSlice ? uvw.y : uvw.z;
+    if (abs(sliceCoord - u_sliceZ) > 0.05) {
       rayPos += rayDir * stepSize;
       continue;
     }

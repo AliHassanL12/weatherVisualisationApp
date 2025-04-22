@@ -19,6 +19,13 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
   
   function setupSliceSlider(cloudMaterial) {
     const slider = document.getElementById('sliceSlider');
+    const toggle = document.getElementById('horizontalToggle');
+
+    toggle.addEventListener('change', () => {
+        if (cloudMaterial?.uniforms?.u_horizontalSlice) {
+          cloudMaterial.uniforms.u_horizontalSlice.value = toggle.checked;
+        }
+      });
   
     slider.addEventListener('input', () => {
       const value = parseFloat(slider.value);
@@ -26,6 +33,15 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
         cloudMaterial.uniforms.u_sliceZ.value = value;
       }
     });
+
+    if (cloudMaterial?.uniforms?.u_horizontalSlice) {
+        cloudMaterial.uniforms.u_horizontalSlice.value = toggle.checked;
+    }
+
+    if (cloudMaterial?.uniforms?.u_sliceZ) {
+        cloudMaterial.uniforms.u_sliceZ.value = parseFloat(slider.value);
+    }
+    
 };  
   export { setupMonthListeners, setupSliceSlider };
   
