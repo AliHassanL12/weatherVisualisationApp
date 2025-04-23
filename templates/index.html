@@ -6,16 +6,27 @@
     <title>Scientific Weather Visualisation in 3D</title>
 </head>
 <body>
-    <div>
-        <div id="month-label" style="position: absolute; top: 10px; left: 10px; color: white; font-size: 1.2rem; z-index: 10;">
-            Loading...
+    <div id="container">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div id="month-label" style="font-size: 1.2rem; font-weight: bold;">Loading...</div>
+            <button id="prevMonth">← Prev</button>
+            <button id="nextMonth">Next →</button>
         </div>
-        <button id="prevMonth">← Prev</button>
-        <button id="nextMonth">Next →</button>
+
+        <label style="margin-top: 10px">
+            <select id="modeSelect">
+                <option value="clouds">Clouds</option>
+                <option value="temperature">Temperature</option>
+            </select>
+        </label>
         <label for="sliceSlider">Altitude slice:</label>
         <input type="range" id="sliceSlider" min="0" max="1" step="0.01" value="0.5" />
-        <label for="horizontalToggle"></label>
-        <input type="checkbox" id="horizontalToggle">
+
+        <label style="margin-top: 5px;">
+            <input type="checkbox" id="horizontalToggle" />
+            Horizontal slice
+        </label>
+        <div id="metricDisplay" style="margin-top: 8px;"></div>
     </div>
 </body>
 </html>

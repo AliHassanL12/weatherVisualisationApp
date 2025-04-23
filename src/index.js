@@ -63,11 +63,17 @@ function loadMonth(index) {
 
   fetch(`http://127.0.0.1:5001/getWeatherData?month=${month}`)
     .then(res => res.json())
-    .then(({ clwc, ciwc, shape }) => {
+    .then(({ clwc, ciwc, shape, temperature }) => {
       const combined = clwc.map((v, i) => v + ciwc[i]);
-      const texture = create3DTextureFromData(combined, shape);
-      monthTextures[index] = { texture, shape };
-      applyCloudTexture(texture, shape, index);
+      const cloudTexture3D = create3DTextureFromData(combined, shape);
+      const tempTexture3D = create3DTextureFromData(temperature, shape);
+
+      monthTextures[index] = {
+        texture: cloudTexture3D,
+        tempTexture: tempTexture3D,
+        shape
+      };
+      applyVisualizationMode(index);
 
       if (index === 0) {
         for (let i = 1; i < months.length; i++) {
@@ -119,13 +125,36 @@ uniform bool u_horizontalSlice;
 
 varying vec3 v_pos;
 
+bool intersectBox(vec3 rayOrigin, vec3 rayDir, out float tNear, out float tFar) {
+  vec3 boxMin = vec3(-3.5);
+  vec3 boxMax = vec3( 3.5);
+  vec3 invDir = 1.0 / rayDir;
+
+  vec3 t0s = (boxMin - rayOrigin) * invDir;
+  vec3 t1s = (boxMax - rayOrigin) * invDir;
+
+  vec3 tsmaller = min(t0s, t1s);
+  vec3 tbigger  = max(t0s, t1s);
+
+  tNear = max(max(tsmaller.x, tsmaller.y), tsmaller.z);
+  tFar  = min(min(tbigger.x, tbigger.y), tbigger.z);
+
+  return tFar > max(tNear, 0.0);
+}
+
+
 vec3 toUVW(vec3 p) {
   return (p + vec3(3.5)) / 7.0;
 }
 
 void main() {
-  vec3 rayOrigin = v_pos;
   vec3 rayDir = normalize(v_pos - u_cameraPos);
+  float tEntry, tExit;
+  if (!intersectBox(u_cameraPos, rayDir, tEntry, tExit)) {
+    discard; // ray misses cube
+  }
+  vec3 rayOrigin = u_cameraPos + rayDir * tEntry;
+
 
   float stepSize = 0.05;
   vec3 rayPos = rayOrigin;
@@ -136,7 +165,7 @@ void main() {
   for (int i = 0; i < 60; i++) {
     vec3 uvw = toUVW(rayPos);
     float sliceCoord = u_horizontalSlice ? uvw.y : uvw.z;
-    if (abs(sliceCoord - u_sliceZ) > 0.05) {
+    if (abs(sliceCoord - u_sliceZ) > 0.1) {
       rayPos += rayDir * stepSize;
       continue;
     }
@@ -194,6 +223,121 @@ void main() {
 
   document.getElementById('month-label').innerText = months[index].label;
 }
+
+function applyTemperatureTexture(texture, shape, index) {
+  if (cloudMesh) scene.remove(cloudMesh);
+
+  const tempBox = new THREE.BoxGeometry(7, 7, 7);
+
+  const tempMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      u_data: { value: texture },
+      u_size: { value: new THREE.Vector3(...shape) },
+      u_sliceZ: { value: 1.0 },
+      u_horizontalSlice: { value: false },
+      u_cameraPos: { value: camera.position },
+    },
+    vertexShader: `
+      varying vec3 v_pos;
+      void main() {
+        v_pos = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      precision highp sampler3D;
+
+      uniform sampler3D u_data;
+      uniform vec3 u_size;
+      uniform float u_sliceZ;
+      uniform bool u_horizontalSlice;
+      uniform vec3 u_cameraPos;
+
+      varying vec3 v_pos;
+
+      bool intersectBox(vec3 rayOrigin, vec3 rayDir, out float tNear, out float tFar) {
+        vec3 boxMin = vec3(-3.5);
+        vec3 boxMax = vec3( 3.5);
+        vec3 invDir = 1.0 / rayDir;
+
+        vec3 t0s = (boxMin - rayOrigin) * invDir;
+        vec3 t1s = (boxMax - rayOrigin) * invDir;
+
+        vec3 tsmaller = min(t0s, t1s);
+        vec3 tbigger  = max(t0s, t1s);
+
+        tNear = max(max(tsmaller.x, tsmaller.y), tsmaller.z);
+        tFar  = min(min(tbigger.x, tbigger.y), tbigger.z);
+
+        return tFar > max(tNear, 0.0);
+      }
+
+      vec3 toUVW(vec3 p) {
+        return (p + vec3(3.5)) / 7.0;
+      }
+
+      vec3 temperatureToColor(float t) {
+        t = clamp((t - 240.0) / 60.0, 0.0, 1.0); // Normalize 240K–300K
+        return mix(vec3(0.0, 0.2, 1.0), vec3(1.0, 0.0, 0.0), t); // Blue to red
+      }
+
+      void main() {
+        vec3 rayDir = normalize(v_pos - u_cameraPos);
+        float tEntry, tExit;
+        if (!intersectBox(u_cameraPos, rayDir, tEntry, tExit)) discard;
+
+        vec3 rayPos = u_cameraPos + rayDir * tEntry;
+        float stepSize = 0.05;
+
+        for (int i = 0; i < 60; i++) {
+          vec3 uvw = toUVW(rayPos);
+          float sliceCoord = u_horizontalSlice ? uvw.y : uvw.z;
+
+          if (abs(sliceCoord - u_sliceZ) > 0.1) {
+            rayPos += rayDir * stepSize;
+            continue;
+          }
+
+          if (any(lessThan(uvw, vec3(0.0))) || any(greaterThan(uvw, vec3(1.0)))) break;
+
+          float temp = texture(u_data, uvw).r;
+          vec3 color = temperatureToColor(temp);
+          gl_FragColor = vec4(color, 1.0);
+          return;
+        }
+
+        discard;
+      }
+    `,
+    transparent: false,
+    depthWrite: true,
+  });
+
+  setupSliceSlider(tempMaterial);
+
+  cloudMesh = new THREE.Mesh(tempBox, tempMaterial);
+  scene.add(cloudMesh);
+
+  document.getElementById('month-label').innerText = months[index].label;
+}
+
+function applyVisualizationMode(index) {
+  const mode = document.getElementById('modeSelect').value;
+  const data = monthTextures[index];
+
+  if (mode === 'clouds') {
+    applyCloudTexture(data.texture, data.shape, index);
+  } else if (mode === 'temperature') {
+    applyTemperatureTexture(data.tempTexture, data.shape, index);
+  }
+}
+
+document.getElementById('modeSelect').addEventListener('change', () => {
+  applyVisualizationMode(currentMonthIndex);
+});
+
+
 loadMonth(currentMonthIndex);
 
 // Animate scene

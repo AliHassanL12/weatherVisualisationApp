@@ -1,6 +1,7 @@
 * {
     margin: 0;
     padding: 0;
+    overflow: hidden;
     box-sizing: border-box;
 }
 body, html {
@@ -11,4 +12,28 @@ body, html {
 
 canvas {
     display: block;
+}
+
+#container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 12px;
+    border-radius: 6px;
+    max-width: 300px;
+}
+
+#container label,
+#container button,
+#container input,
+#container div {
+  display: block;
+  margin-bottom: 6px;
+}
+#month-label {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
 }

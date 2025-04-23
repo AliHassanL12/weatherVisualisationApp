@@ -3,8 +3,6 @@ from flask import jsonify, request
 
 ds = xr.open_dataset('./downloads/era5_cloud_structure_2020.nc')
 
-print(ds['valid_time'].values)
-
 def getWeatherData():
 
     month = request.args.get('month', '2020-09-01')
@@ -31,10 +29,15 @@ def getWeatherData():
 
     # Preserve the shape of the 3D array
     shape = clwc_down.shape
+
+    temperature = ds['t'].sel(valid_time=month)
+    temperature_down = temperature.coarsen(pressure_level=3, latitude=12, longitude=12, boundary='pad').mean()
+    temperature_array = temperature_down.values.astype('float32').flatten().tolist()
     return jsonify({
         "clwc": clwc_array,
         "ciwc": ciwc_array,
-        "shape": shape
+        "shape": shape,
+        "temperature": temperature_array
     }) # Jsonify internally handles conversion of common types like datetime objects automatically
 
 
