@@ -379,6 +379,7 @@ function renderWindVectors(wind_u, wind_v, shape) {
       if (u === 0 && v === 0) continue;
 
       const speed = Math.sqrt(u * u + v * v);
+      if (speed < 0.1) continue;
       const dirX = u / speed;
       const dirY = 0;
       const dirZ = -v / speed;
