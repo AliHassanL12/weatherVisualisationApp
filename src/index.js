@@ -362,43 +362,55 @@ function renderWindVectors(wind_u, wind_v, shape) {
 
   const [latCount, lonCount] = shape;
   const radius = 3.5
+  const arrowLength = 0.3;
 
+  const dummy = new THREE.Object3D();
+  const dir = new THREE.Vector3();
+  const arrowGeometry = new THREE.CylinderGeometry(0, 0.02, arrowLength, 5, 1);
+  const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.6 });
 
-  for (let i = 0; i < latCount; i++) {
-    const lat = 90 - (180 / (latCount - 1)) * i; 
-    const phi = (90 - lat) * (Math.PI / 180); 
+  const instanceCount = latCount * lonCount;
+  const mesh = new THREE.InstancedMesh(arrowGeometry, arrowMaterial, instanceCount);
+  let i = 0;
+  for (let latIdx = 0; latIdx < latCount; latIdx++) {
+    const lat = 90 - (180 / (latCount - 1)) * latIdx;
+    const phi = (90 - lat) * Math.PI / 180;
 
-    for (let j = 0; j < lonCount; j++) {
-      const lon = -180 + (360 / (lonCount - 1)) * j;
-      const theta = (lon + 180) * (Math.PI / 180); 
+    for (let lonIdx = 0; lonIdx < lonCount; lonIdx++) {
+      const lon = -180 + (360 / (lonCount - 1)) * lonIdx;
+      const theta = (lon + 180) * Math.PI / 180;
 
-      const idx = i * lonCount + j;
-      const u = wind_u[idx];
-      const v = wind_v[idx];
+      const index = latIdx * lonCount + lonIdx;
+      const u = wind_u[index];
+      const v = wind_v[index];
 
       if (u === 0 && v === 0) continue;
-
-      const speed = Math.sqrt(u * u + v * v);
-      if (speed < 0.1) continue;
-      const dirX = u / speed;
-      const dirY = 0;
-      const dirZ = -v / speed;
 
       const x = radius * Math.sin(phi) * Math.cos(theta);
       const y = radius * Math.cos(phi);
       const z = radius * Math.sin(phi) * Math.sin(theta);
-
       const origin = new THREE.Vector3(x, y, z);
-      const dir = new THREE.Vector3(dirX, dirY, dirZ).normalize();
 
-      const arrow = new THREE.ArrowHelper(dir, origin, 0.3, 0xffff00, 0.1, 0.05);
-      arrow.cone.material.transparent = true;
-      arrow.line.material.transparent = true;
-      arrow.cone.material.opacity = 0.5;
-      arrow.line.material.opacity = 0.5;
-      windGroup.add(arrow);
+      const east = new THREE.Vector3(-Math.sin(theta), 0, Math.cos(theta));
+      const north = new THREE.Vector3(
+        -Math.cos(theta) * Math.cos(phi),
+        Math.sin(phi),
+        -Math.sin(theta) * Math.cos(phi)
+      );
+
+      const dir = new THREE.Vector3()
+      .addScaledVector(east, u)
+      .addScaledVector(north, v)
+      .normalize();
+
+      dummy.position.copy(origin);
+      dummy.lookAt(origin.clone().add(dir));
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i++, dummy.matrix);
     }
   }
+  mesh.instanceMatrix.needsUpdate = true;
+  windGroup.add(mesh);
 }
 
 
