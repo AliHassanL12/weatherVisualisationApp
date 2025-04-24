@@ -367,10 +367,35 @@ function renderWindVectors(wind_u, wind_v, shape) {
   const dummy = new THREE.Object3D();
   const dir = new THREE.Vector3();
   const arrowGeometry = new THREE.CylinderGeometry(0, 0.02, arrowLength, 5, 1);
-  const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.6 });
+  
+
+  const vertexShader = `
+  attribute vec3 instanceColor;
+  varying vec3 vColor;
+  void main() {
+    vColor = instanceColor;
+    gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+  }
+  `;
+
+  const fragmentShader = `
+  varying vec3 vColor;
+  void main() {
+    gl_FragColor = vec4(vColor, 1.0);
+  }
+  `;
+
+  const arrowMaterial = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    transparent: true,
+  });
 
   const instanceCount = latCount * lonCount;
   const mesh = new THREE.InstancedMesh(arrowGeometry, arrowMaterial, instanceCount);
+  const colorArray = new Float32Array(instanceCount * 3);
+
+
   let i = 0;
   for (let latIdx = 0; latIdx < latCount; latIdx++) {
     const lat = 90 - (180 / (latCount - 1)) * latIdx;
@@ -383,6 +408,7 @@ function renderWindVectors(wind_u, wind_v, shape) {
       const index = latIdx * lonCount + lonIdx;
       const u = wind_u[index];
       const v = wind_v[index];
+      const speed = Math.sqrt(u * u + v * v);
 
       if (u === 0 && v === 0) continue;
 
@@ -391,13 +417,17 @@ function renderWindVectors(wind_u, wind_v, shape) {
       const z = radius * Math.sin(phi) * Math.sin(theta);
       const origin = new THREE.Vector3(x, y, z);
 
+      // calculating local east tangent vector at the current point, pointing eastwards (right from true north)
       const east = new THREE.Vector3(-Math.sin(theta), 0, Math.cos(theta));
+
+      // This is our local north tangent vector
       const north = new THREE.Vector3(
         -Math.cos(theta) * Math.cos(phi),
         Math.sin(phi),
         -Math.sin(theta) * Math.cos(phi)
       );
 
+      // This uses our wind data (u and v which are in east and north directions) and turns them into a 3D vector
       const dir = new THREE.Vector3()
       .addScaledVector(east, u)
       .addScaledVector(north, v)
@@ -406,10 +436,19 @@ function renderWindVectors(wind_u, wind_v, shape) {
       dummy.position.copy(origin);
       dummy.lookAt(origin.clone().add(dir));
       dummy.updateMatrix();
-      mesh.setMatrixAt(i++, dummy.matrix);
+      mesh.setMatrixAt(i, dummy.matrix);
+
+      const color = new THREE.Color();
+      color.setHSL((1.0 - Math.min(speed / 50, 1.0)) * 0.7, 1.0, 0.5); 
+      color.toArray(colorArray, i * 3);
+      i++;
     }
   }
   mesh.instanceMatrix.needsUpdate = true;
+  mesh.geometry.setAttribute(
+    'instanceColor',
+    new THREE.InstancedBufferAttribute(colorArray, 3)
+  );
   windGroup.add(mesh);
 }
 
