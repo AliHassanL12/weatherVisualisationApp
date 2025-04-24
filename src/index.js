@@ -391,7 +391,11 @@ function renderWindVectors(wind_u, wind_v, shape) {
       const origin = new THREE.Vector3(x, y, z);
       const dir = new THREE.Vector3(dirX, dirY, dirZ).normalize();
 
-      const arrow = new THREE.ArrowHelper(dir, origin, 0.5, 0xffff00, 0.1, 0.05);
+      const arrow = new THREE.ArrowHelper(dir, origin, 0.3, 0xffff00, 0.1, 0.05);
+      arrow.cone.material.transparent = true;
+      arrow.line.material.transparent = true;
+      arrow.cone.material.opacity = 0.5;
+      arrow.line.material.opacity = 0.5;
       windGroup.add(arrow);
     }
   }
