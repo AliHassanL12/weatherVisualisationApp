@@ -354,6 +354,10 @@ let windGroup = new THREE.Group();
 scene.add(windGroup);
 
 function renderWindVectors(wind_u, wind_v, shape) {
+  if (cloudMesh) {
+    scene.remove(cloudMesh);
+    cloudMesh = null;
+  }  
   windGroup.clear();
 
   const [latCount, lonCount] = shape;
