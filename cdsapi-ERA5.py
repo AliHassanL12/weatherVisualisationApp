@@ -8,7 +8,9 @@ request = {
         "relative_humidity",
         "specific_cloud_ice_water_content",
         "specific_cloud_liquid_water_content",
-        "temperature"
+        "temperature",
+        "u_component_of_wind",
+        "v_component_of_wind"
     ],
     "pressure_level": [
         "1", "2", "3",

@@ -3,6 +3,8 @@ from flask import jsonify, request
 
 ds = xr.open_dataset('./downloads/era5_cloud_structure_2020.nc')
 
+print(ds)
+
 def getWeatherData():
 
     month = request.args.get('month', '2020-09-01')
@@ -33,11 +35,36 @@ def getWeatherData():
     temperature = ds['t'].sel(valid_time=month)
     temperature_down = temperature.coarsen(pressure_level=3, latitude=12, longitude=12, boundary='pad').mean()
     temperature_array = temperature_down.values.astype('float32').flatten().tolist()
+
+    # extracting u and v component of wind
+
+    u = ds['u'].sel(valid_time=month, pressure_level=500)
+    v = ds['v'].sel(valid_time=month, pressure_level=500)
+
+    u = u.roll(longitude=u.sizes['longitude'] // 2, roll_coords=True)
+    v = v.roll(longitude=v.sizes['longitude'] // 2, roll_coords=True)
+
+    u['longitude'] = (u['longitude'] + 180) % 360 - 180
+    v['longitude'] = (v['longitude'] + 180) % 360 - 180
+
+    u = u.sortby('longitude')
+    v = v.sortby('longitude')
+
+    u_down = u.coarsen(latitude=12, longitude=12, boundary='pad').mean()
+    v_down = v.coarsen(latitude=12, longitude=12, boundary='pad').mean()
+
+    u_vals = u_down.values.astype('float32').flatten().tolist()
+    v_vals = v_down.values.astype('float32').flatten().tolist()
+
+    shape_2d = u_down.shape
     return jsonify({
         "clwc": clwc_array,
         "ciwc": ciwc_array,
         "shape": shape,
-        "temperature": temperature_array
+        "temperature": temperature_array,
+        "wind_u": u_vals,
+        "wind_v": v_vals,
+        "wind_shape": shape_2d
     }) # Jsonify internally handles conversion of common types like datetime objects automatically
 
 

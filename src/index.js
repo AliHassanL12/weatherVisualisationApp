@@ -63,7 +63,7 @@ function loadMonth(index) {
 
   fetch(`http://127.0.0.1:5001/getWeatherData?month=${month}`)
     .then(res => res.json())
-    .then(({ clwc, ciwc, shape, temperature }) => {
+    .then(({ clwc, ciwc, shape, temperature, wind_u, wind_v, wind_shape }) => {
       const combined = clwc.map((v, i) => v + ciwc[i]);
       const cloudTexture3D = create3DTextureFromData(combined, shape);
       const tempTexture3D = create3DTextureFromData(temperature, shape);
@@ -71,7 +71,10 @@ function loadMonth(index) {
       monthTextures[index] = {
         texture: cloudTexture3D,
         tempTexture: tempTexture3D,
-        shape
+        shape,
+        wind_u,
+        wind_v,
+        wind_shape
       };
       applyVisualizationMode(index);
 
@@ -292,6 +295,12 @@ function applyTemperatureTexture(texture, shape, index) {
 
         for (int i = 0; i < 60; i++) {
           vec3 uvw = toUVW(rayPos);
+
+          float r = length(rayPos);
+          if (r < 3.5) {
+            rayPos += rayDir * stepSize;
+            continue;
+          }
           float sliceCoord = u_horizontalSlice ? uvw.y : uvw.z;
 
           if (abs(sliceCoord - u_sliceZ) > 0.1) {
@@ -303,15 +312,16 @@ function applyTemperatureTexture(texture, shape, index) {
 
           float temp = texture(u_data, uvw).r;
           vec3 color = temperatureToColor(temp);
-          gl_FragColor = vec4(color, 1.0);
+          gl_FragColor = vec4(color, 0.4);
           return;
         }
 
         discard;
       }
     `,
-    transparent: false,
-    depthWrite: true,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.NormalBlending
   });
 
   setupSliceSlider(tempMaterial);
@@ -330,12 +340,57 @@ function applyVisualizationMode(index) {
     applyCloudTexture(data.texture, data.shape, index);
   } else if (mode === 'temperature') {
     applyTemperatureTexture(data.tempTexture, data.shape, index);
+  } else if (mode === 'wind') {
+    renderWindVectors(data.wind_u, data.wind_v, data.wind_shape);
+    windGroup.visible = true;
   }
 }
 
 document.getElementById('modeSelect').addEventListener('change', () => {
   applyVisualizationMode(currentMonthIndex);
 });
+
+let windGroup = new THREE.Group();
+scene.add(windGroup);
+
+function renderWindVectors(wind_u, wind_v, shape) {
+  windGroup.clear();
+
+  const [latCount, lonCount] = shape;
+  const radius = 3.5
+
+
+  for (let i = 0; i < latCount; i++) {
+    const lat = 90 - (180 / (latCount - 1)) * i; 
+    const phi = (90 - lat) * (Math.PI / 180); 
+
+    for (let j = 0; j < lonCount; j++) {
+      const lon = -180 + (360 / (lonCount - 1)) * j;
+      const theta = (lon + 180) * (Math.PI / 180); 
+
+      const idx = i * lonCount + j;
+      const u = wind_u[idx];
+      const v = wind_v[idx];
+
+      if (u === 0 && v === 0) continue;
+
+      const speed = Math.sqrt(u * u + v * v);
+      const dirX = u / speed;
+      const dirY = 0;
+      const dirZ = -v / speed;
+
+      const x = radius * Math.sin(phi) * Math.cos(theta);
+      const y = radius * Math.cos(phi);
+      const z = radius * Math.sin(phi) * Math.sin(theta);
+
+      const origin = new THREE.Vector3(x, y, z);
+      const dir = new THREE.Vector3(dirX, dirY, dirZ).normalize();
+
+      const arrow = new THREE.ArrowHelper(dir, origin, 0.5, 0xffff00, 0.1, 0.05);
+      windGroup.add(arrow);
+    }
+  }
+}
 
 
 loadMonth(currentMonthIndex);
