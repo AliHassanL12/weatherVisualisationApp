@@ -10,11 +10,9 @@ body, html {
     overflow: hidden;
 }
 
-canvas {
-    display: block;
-}
 
 #container {
+    border: 1px solid rgb(153, 239, 97);
     position: absolute;
     top: 10px;
     left: 10px;
@@ -26,14 +24,52 @@ canvas {
     max-width: 300px;
 }
 
+#container {
+    display: flex;
+    flex-direction: column;
+}
+
 #container label,
 #container button,
-#container input,
-#container div {
-  display: block;
+#container input {
   margin-bottom: 6px;
-}
+};
+
 #month-label {
   font-size: 1.2rem;
   margin-bottom: 8px;
+};
+
+#legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 200px;
+    color: white;
+    margin-top: 10px;
+}
+
+.legend-label {
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.legend-bar {
+    height: 15px;
+    width: 100%;
+    background: linear-gradient(to right,
+    hsl(240, 100%, 50%), 
+    hsl(120, 100%, 50%),  
+    hsl(0, 100%, 50%)     
+    );
+    border: 1px solid white;
+    margin-bottom: 4px;
+}
+
+
+.legend-range {
+    display: flex;
+    justify-content: space-evenly;
+    font-size: 14px;
 }
