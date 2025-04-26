@@ -5,7 +5,11 @@ import { createEarth } from './earth';
 import { setupScene } from './scene'; 
 import { fetchRawCloudData } from './fetch-request.js';
 import { create3DTextureFromData } from './texture-utils';
-import { setupMonthListeners, setupSliceSlider } from './dom.js';
+import { setupMonthListeners, setupSliceSlider, trackMouse } from './dom.js';
+
+const tooltip = document.getElementById('tooltip');
+const raycaster = new THREE.Raycaster();
+let windMeshRef = null; 
 
 const { scene, camera, renderer } = setupScene();
 
@@ -449,6 +453,7 @@ function renderWindVectors(wind_u, wind_v, shape) {
     'instanceColor',
     new THREE.InstancedBufferAttribute(colorArray, 3)
   );
+  windMeshRef = mesh;
   windGroup.add(mesh);
 }
 
@@ -461,6 +466,20 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+trackMouse(
+  raycaster,
+  camera,
+  () => {
+    const mode = document.getElementById('modeSelect').value;
+    if (mode === 'wind') {
+      return { mesh: windMeshRef, mode };
+    } else {
+      return { mesh: cloudMesh, mode };
+    }
+  },
+  () => monthTextures[currentMonthIndex],
+  tooltip
+);
 
 
 animate();

@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 function setupMonthListeners(loadMonthFn, monthsArrayRef) {
     const nextButton = document.getElementById('nextMonth');
     const prevButton = document.getElementById('prevMonth');
@@ -63,5 +65,46 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
     updateMetricsDisplay(initialValue, toggle.checked);
   }
   
-  export { setupMonthListeners, setupSliceSlider };
+function trackMouse(raycaster, camera, getMeshAndMode, getTextures, tooltipElement) {
+    const mouse = new THREE.Vector2();
+    
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    
+        tooltipElement.style.left = `${e.clientX + 10}px`;
+        tooltipElement.style.top = `${e.clientY + 10}px`;
+    
+        const { mesh, mode } = getMeshAndMode();
+        if (!mesh) {
+            tooltipElement.style.display = 'none';
+            return;
+        }
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(mesh);
+  
+        if (mode === 'wind' && intersects.length > 0) {
+            const intersect = intersects[0];
+            if (intersect.instanceId !== undefined) {
+            const idx = intersect.instanceId;
+            const textures = getTextures();
+            const u = textures.wind_u[idx];
+            const v = textures.wind_v[idx];
+            const speed = Math.sqrt(u * u + v * v).toFixed(2);
+    
+            tooltipElement.innerText = `Wind speed: ${speed} m/s`;
+            tooltipElement.style.display = 'block';
+        } else {
+            tooltipElement.style.display = 'none';
+        }
+    } else {
+        tooltipElement.style.display = 'none';
+    }
+});
+}
+  
+  
+
+
+  export { setupMonthListeners, setupSliceSlider, trackMouse };
   

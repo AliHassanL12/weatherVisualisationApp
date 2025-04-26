@@ -1,18 +1,16 @@
 * {
     margin: 0;
     padding: 0;
-    overflow: hidden;
     box-sizing: border-box;
 }
 body, html {
     height: 100%;
     width: 100%;
-    overflow: hidden;
 }
 
 
+
 #container {
-    border: 1px solid rgb(153, 239, 97);
     position: absolute;
     top: 10px;
     left: 10px;
@@ -24,14 +22,10 @@ body, html {
     max-width: 300px;
 }
 
-#container {
-    display: flex;
-    flex-direction: column;
-}
-
 #container label,
 #container button,
 #container input {
+  display: block;
   margin-bottom: 6px;
 };
 
@@ -72,4 +66,16 @@ body, html {
     display: flex;
     justify-content: space-evenly;
     font-size: 14px;
+}
+
+#tooltip {
+    position: absolute;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 12px;
+    border-radius: 4px;
+    pointer-events: none;
+    display: none;
+    z-index: 20;
 }
