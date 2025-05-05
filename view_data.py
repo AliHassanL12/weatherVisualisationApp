@@ -19,8 +19,8 @@ def getWeatherData():
     ciwc['longitude'] = (ciwc['longitude'] + 180) % 360 - 180
    
     # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
-    clwc_down = clwc.coarsen(pressure_level=3, latitude=12, longitude=12, boundary='pad').mean()
-    ciwc_down = ciwc.coarsen(pressure_level=3, latitude=12, longitude=12, boundary='pad').mean()
+    clwc_down = clwc.coarsen(latitude=6, longitude=6, boundary='pad').mean()
+    ciwc_down = ciwc.coarsen(latitude=6, longitude=6, boundary='pad').mean()
 
     clwc = clwc.sortby('longitude')
     ciwc = ciwc.sortby('longitude')
@@ -33,7 +33,7 @@ def getWeatherData():
     shape = clwc_down.shape
 
     temperature = ds['t'].sel(valid_time=month)
-    temperature_down = temperature.coarsen(pressure_level=3, latitude=12, longitude=12, boundary='pad').mean()
+    temperature_down = temperature.coarsen(latitude=12, longitude=12, boundary='pad').mean()
     temperature_array = temperature_down.values.astype('float32').flatten().tolist()
 
     # extracting u and v component of wind
@@ -50,8 +50,8 @@ def getWeatherData():
     u = u.sortby('longitude')
     v = v.sortby('longitude')
 
-    u_down = u.coarsen(latitude=12, longitude=12, boundary='pad').mean()
-    v_down = v.coarsen(latitude=12, longitude=12, boundary='pad').mean()
+    u_down = u.coarsen(latitude=3, longitude=3, boundary='pad').mean()
+    v_down = v.coarsen(latitude=3, longitude=3, boundary='pad').mean()
 
     u_vals = u_down.values.astype('float32').flatten().tolist()
     v_vals = v_down.values.astype('float32').flatten().tolist()
