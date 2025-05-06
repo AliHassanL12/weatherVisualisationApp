@@ -19,16 +19,17 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
     return () => currentIndex;
   }
   
-  function setupSliceSlider(material) {
+  function setupSliceSlider(material, uniformName = 'u_sliceZ') {
     const slider = document.getElementById('sliceSlider');
     const toggle = document.getElementById('horizontalToggle');
     const metricDisplay = document.getElementById('metricDisplay');
   
     const pressureLevels = [
-      975, 900, 825, 741.67, 600,
-      450, 300, 200, 125, 50,
-      12.33, 3.33, 1
+      1000 ,975 ,950 ,925 ,900 ,875 ,850 ,825 ,800 ,775 ,750 ,700 ,650 ,600, 550, 500, 450, 400, 350, 300, 250, 225 ,200 ,175, 150, 125, 100, 70, 50,
+      30, 20, 10, 7, 5,
+      3, 2, 1
     ];
+
   
     function updateMetricsDisplay(sliceValue, isHorizontal) {
       const zIndex = Math.floor(sliceValue * (pressureLevels.length - 1));
@@ -47,16 +48,16 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
   
     slider.addEventListener('input', () => {
       const value = parseFloat(slider.value);
-      if (material?.uniforms?.u_sliceZ) {
-        material.uniforms.u_sliceZ.value = value;
+      if (material?.uniforms?.[uniformName]) {
+        material.uniforms[uniformName].value = value;
       }
       updateMetricsDisplay(value, toggle.checked);
     });
   
     // Set initial values
     const initialValue = parseFloat(slider.value);
-    if (material?.uniforms?.u_sliceZ) {
-      material.uniforms.u_sliceZ.value = initialValue;
+    if (material?.uniforms?.[uniformName]) {
+      material.uniforms[uniformName].value = initialValue;
     }
     if (material?.uniforms?.u_horizontalSlice) {
       material.uniforms.u_horizontalSlice.value = toggle.checked;

@@ -19,8 +19,8 @@ def getWeatherData():
     ciwc['longitude'] = (ciwc['longitude'] + 180) % 360 - 180
    
     # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
-    clwc_down = clwc.coarsen(latitude=6, longitude=6, boundary='pad').mean()
-    ciwc_down = ciwc.coarsen(latitude=6, longitude=6, boundary='pad').mean()
+    clwc_down = clwc.coarsen(latitude=9, longitude=9, boundary='pad').mean()
+    ciwc_down = ciwc.coarsen(latitude=9, longitude=9, boundary='pad').mean()
 
     clwc = clwc.sortby('longitude')
     ciwc = ciwc.sortby('longitude')

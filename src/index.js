@@ -3,9 +3,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createEarth } from './earth';
 import { setupScene } from './scene'; 
-import { fetchRawCloudData } from './fetch-request.js';
+import { createSphericalSlice } from './spherical-slice.js';
 import { create3DTextureFromData } from './texture-utils';
 import { setupMonthListeners, setupSliceSlider, trackMouse } from './dom.js';
+
+let sphericalSliceRef = null;
+let sphericalMaterialRef = null;
 
 const tooltip = document.getElementById('tooltip');
 const raycaster = new THREE.Raycaster();
@@ -340,8 +343,22 @@ function applyVisualizationMode(index) {
   const mode = document.getElementById('modeSelect').value;
   const data = monthTextures[index];
 
+  if (cloudMesh) {
+    scene.remove(cloudMesh);
+    cloudMesh = null;
+  }
+  if (sphericalSliceRef) {
+    scene.remove(sphericalSliceRef);
+    sphericalSliceRef = null;
+    sphericalMaterialRef = null;
+  }
+  windGroup.clear();
+  windGroup.visible = false;
   if (mode === 'clouds') {
     applyCloudTexture(data.texture, data.shape, index);
+  } else if (mode === 'cloudSlice') {
+    console.log("Texture shape:", data.shape);
+    createSphericalCloudSlice(data.texture, data.shape);
   } else if (mode === 'temperature') {
     applyTemperatureTexture(data.tempTexture, data.shape, index);
   } else if (mode === 'wind') {
@@ -349,6 +366,7 @@ function applyVisualizationMode(index) {
     windGroup.visible = true;
   }
 }
+
 
 document.getElementById('modeSelect').addEventListener('change', () => {
   applyVisualizationMode(currentMonthIndex);
@@ -457,6 +475,15 @@ function renderWindVectors(wind_u, wind_v, shape) {
   windGroup.add(mesh);
 }
 
+function createSphericalCloudSlice(texture, shape) {
+  const { sphere, material } = createSphericalSlice(texture, shape);
+  sphericalSliceRef = sphere;
+  sphericalMaterialRef = material;
+  scene.add(sphericalSliceRef);
+  setupSliceSlider(material, 'uPressureIndex');
+}
+
+
 
 loadMonth(currentMonthIndex);
 
@@ -473,6 +500,8 @@ trackMouse(
     const mode = document.getElementById('modeSelect').value;
     if (mode === 'wind') {
       return { mesh: windMeshRef, mode };
+    } else if (mode === 'cloudSlice') {
+      return { mesh: sphericalSliceRef, mode };
     } else {
       return { mesh: cloudMesh, mode };
     }

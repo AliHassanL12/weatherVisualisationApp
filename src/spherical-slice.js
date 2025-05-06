@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
-function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex = 5) {
-    const sliceRadius = 1.01;
+function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex = 10) {
+    const sliceRadius = 4.0;
     const geometry = new THREE.SphereGeometry(sliceRadius, 128, 128);
     const material = new THREE.ShaderMaterial({
         transparent: true,
@@ -15,7 +15,7 @@ function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex =
         void main() {
             vPosition = normalize(position);
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        } 
+        }
         `,
         fragmentShader: `
         precision highp float;
@@ -34,7 +34,8 @@ function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex =
             float z = uPressureIndex / (uTextureShape.x - 1.0);
             vec3 texCoord = vec3(z, y, x);
             float value = texture(uTexture3D, texCoord).r;
-            gl_FragColor = vec4(vec3(value), value);
+            float amplified = value * 10000.0;
+            gl_FragColor = vec4(vec3(amplified), 1.0);
             }
         `,
         side: THREE.DoubleSide,
