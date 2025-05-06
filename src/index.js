@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createEarth } from './earth';
 import { setupScene } from './scene'; 
-import { createSphericalSlice } from './spherical-slice.js';
+import { createSphericalSlice, createTempSlice } from './spherical-slice.js';
 import { create3DTextureFromData } from './texture-utils';
 import { setupMonthListeners, setupSliceSlider, trackMouse } from './dom.js';
 
@@ -364,6 +364,8 @@ function applyVisualizationMode(index) {
   } else if (mode === 'wind') {
     renderWindVectors(data.wind_u, data.wind_v, data.wind_shape);
     windGroup.visible = true;
+  } else if (mode === 'tempSlice') {
+    createSphericalTempSlice(data.tempTexture, data.shape);
   }
 }
 
@@ -477,6 +479,14 @@ function renderWindVectors(wind_u, wind_v, shape) {
 
 function createSphericalCloudSlice(texture, shape) {
   const { sphere, material } = createSphericalSlice(texture, shape);
+  sphericalSliceRef = sphere;
+  sphericalMaterialRef = material;
+  scene.add(sphericalSliceRef);
+  setupSliceSlider(material, 'uPressureIndex');
+}
+
+function createSphericalTempSlice(texture, shape) {
+  const { sphere, material } = createTempSlice(texture, shape);
   sphericalSliceRef = sphere;
   sphericalMaterialRef = material;
   scene.add(sphericalSliceRef);
