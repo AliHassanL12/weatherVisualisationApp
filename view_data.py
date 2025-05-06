@@ -36,6 +36,9 @@ def getWeatherData():
     temperature_down = temperature.coarsen(latitude=12, longitude=12, boundary='pad').mean()
     temperature_array = temperature_down.values.astype('float32').flatten().tolist()
 
+    print("✅ Temp shape:", temperature_down.shape)
+    print("✅ Temp flattened length:", len(temperature_array))
+
     # extracting u and v component of wind
 
     u = ds['u'].sel(valid_time=month, pressure_level=500)
@@ -62,6 +65,7 @@ def getWeatherData():
         "ciwc": ciwc_array,
         "shape": shape,
         "temperature": temperature_array,
+        "temperature_shape": temperature_down.shape,
         "wind_u": u_vals,
         "wind_v": v_vals,
         "wind_shape": shape_2d

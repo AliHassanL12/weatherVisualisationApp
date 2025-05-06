@@ -70,11 +70,15 @@ function loadMonth(index) {
 
   fetch(`http://127.0.0.1:5001/getWeatherData?month=${month}`)
     .then(res => res.json())
-    .then(({ clwc, ciwc, shape, temperature, wind_u, wind_v, wind_shape }) => {
+    .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape }) => {
       const combined = clwc.map((v, i) => v + ciwc[i]);
       const cloudTexture3D = create3DTextureFromData(combined, shape);
-      const tempTexture3D = create3DTextureFromData(temperature, shape);
+      console.log("📦 Temperature shape:", temperature_shape);
+      console.log("📊 Expected length:", temperature_shape[0] * temperature_shape[1] * temperature_shape[2]);
+      console.log("📊 Received length:", temperature.length);
 
+      const tempTexture3D = create3DTextureFromData(temperature, temperature_shape);
+      
       monthTextures[index] = {
         texture: cloudTexture3D,
         tempTexture: tempTexture3D,

@@ -51,6 +51,10 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
       if (material?.uniforms?.[uniformName]) {
         material.uniforms[uniformName].value = value;
       }
+      if (material?.uniforms?.uPressureIndex) {
+        const pressureIndex = Math.floor(value * (pressureLevels.length - 1));
+        material.uniforms.uPressureIndex.value = pressureIndex;
+      }
       updateMetricsDisplay(value, toggle.checked);
     });
   
@@ -59,10 +63,13 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
     if (material?.uniforms?.[uniformName]) {
       material.uniforms[uniformName].value = initialValue;
     }
+    if (material?.uniforms?.uPressureIndex) {
+      const pressureIndex = Math.floor(initialValue * (pressureLevels.length - 1));
+      material.uniforms.uPressureIndex.value = pressureIndex;
+    }
     if (material?.uniforms?.u_horizontalSlice) {
       material.uniforms.u_horizontalSlice.value = toggle.checked;
-    }
-  
+    } 
     updateMetricsDisplay(initialValue, toggle.checked);
   }
   

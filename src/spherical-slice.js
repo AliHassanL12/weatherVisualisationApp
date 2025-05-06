@@ -48,13 +48,13 @@ function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex =
     return { sphere, material};
 }
 
-function createTempSlice() {
+function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0) {
     const sliceRadius = 4.0;
     const geometry = new THREE.SphereGeometry(sliceRadius, 128, 128);
     const material = new THREE.ShaderMaterial({
         transparent: true,
         uniforms: {
-            uTexture3D: {value: data3DTexure},
+            uTexture3D: {value: data3DTexture},
             uPressureIndex: { value: initialPressureIndex},
             uTextureShape: { value: new THREE.Vector3(...textureShape)},
         },
