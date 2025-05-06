@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex = 10) {
+function createSphericalSlice(data3DTexure, textureShape, maxCloudValue, initialPressureIndex = 10) {
     const sliceRadius = 4.0;
     const geometry = new THREE.SphereGeometry(sliceRadius, 128, 128);
     const material = new THREE.ShaderMaterial({
@@ -9,6 +9,7 @@ function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex =
             uTexture3D: {value: data3DTexure},
             uPressureIndex: { value: initialPressureIndex},
             uTextureShape: { value: new THREE.Vector3(...textureShape)},
+            uMaxValue: { value: maxCloudValue }
         },
         vertexShader:`
         varying vec3 vPosition;
@@ -23,6 +24,7 @@ function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex =
         uniform float uPressureIndex;
         uniform vec3 uTextureShape;
         varying vec3 vPosition;
+        uniform float uMaxValue;
 
         void main() {
             float lat = asin(vPosition.y);
@@ -34,8 +36,9 @@ function createSphericalSlice(data3DTexure, textureShape, initialPressureIndex =
             float z = uPressureIndex / (uTextureShape.x - 1.0);
             vec3 texCoord = vec3(z, y, x);
             float value = texture(uTexture3D, texCoord).r;
-            float amplified = value * 10000.0;
-            gl_FragColor = vec4(vec3(amplified), 1.0);
+            float norm = clamp(value / uMaxValue, 0.0, 1.0); // normalise based on a known max value
+            float visibility = smoothstep(0.02, 0.3, norm);
+            gl_FragColor = vec4(vec3(visibility), 1.0);
             }
         `,
         side: THREE.DoubleSide,
@@ -73,7 +76,7 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0) 
         varying vec3 vPosition;
         
         vec3 temperatureToColor(float t) {
-            t = clamp((t - 240.0) / 60.0, 0.0, 1.0);
+            t = clamp((t - 200.0) / 60.0, 0.0, 1.0);
             return mix(vec3(0.0, 0.2, 1.0), vec3(1.0, 0.0, 0.0), t);
         }
 

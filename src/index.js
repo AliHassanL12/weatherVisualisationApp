@@ -70,12 +70,9 @@ function loadMonth(index) {
 
   fetch(`http://127.0.0.1:5001/getWeatherData?month=${month}`)
     .then(res => res.json())
-    .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape }) => {
+    .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape, max_cloud_value }) => {
       const combined = clwc.map((v, i) => v + ciwc[i]);
       const cloudTexture3D = create3DTextureFromData(combined, shape);
-      console.log("📦 Temperature shape:", temperature_shape);
-      console.log("📊 Expected length:", temperature_shape[0] * temperature_shape[1] * temperature_shape[2]);
-      console.log("📊 Received length:", temperature.length);
 
       const tempTexture3D = create3DTextureFromData(temperature, temperature_shape);
       
@@ -85,7 +82,8 @@ function loadMonth(index) {
         shape,
         wind_u,
         wind_v,
-        wind_shape
+        wind_shape,
+        maxCloudValue: max_cloud_value
       };
       applyVisualizationMode(index);
 
@@ -362,7 +360,7 @@ function applyVisualizationMode(index) {
     applyCloudTexture(data.texture, data.shape, index);
   } else if (mode === 'cloudSlice') {
     console.log("Texture shape:", data.shape);
-    createSphericalCloudSlice(data.texture, data.shape);
+    createSphericalCloudSlice(data.texture, data.shape, data.maxCloudValue);
   } else if (mode === 'temperature') {
     applyTemperatureTexture(data.tempTexture, data.shape, index);
   } else if (mode === 'wind') {
@@ -481,8 +479,8 @@ function renderWindVectors(wind_u, wind_v, shape) {
   windGroup.add(mesh);
 }
 
-function createSphericalCloudSlice(texture, shape) {
-  const { sphere, material } = createSphericalSlice(texture, shape);
+function createSphericalCloudSlice(texture, shape, maxValue) {
+  const { sphere, material } = createSphericalSlice(texture, shape, maxValue);
   sphericalSliceRef = sphere;
   sphericalMaterialRef = material;
   scene.add(sphericalSliceRef);

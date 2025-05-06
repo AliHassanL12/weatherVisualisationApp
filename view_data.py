@@ -12,6 +12,10 @@ def getWeatherData():
     clwc = ds['clwc'].sel(valid_time=month)
     ciwc = ds['ciwc'].sel(valid_time=month)
 
+    max_clwc_raw = ds['clwc'].sel(valid_time='2020-09-01').max().values
+    print("Max raw CLWC:", max_clwc_raw)
+
+
     clwc = clwc.roll(longitude=clwc.sizes['longitude'] // 2, roll_coords=True)
     ciwc = ciwc.roll(longitude=ciwc.sizes['longitude'] // 2, roll_coords=True)
 
@@ -21,6 +25,14 @@ def getWeatherData():
     # Now we downsample the data into blocks of 8x8, which are perfect to send to the front-end
     clwc_down = clwc.coarsen(latitude=9, longitude=9, boundary='pad').mean()
     ciwc_down = ciwc.coarsen(latitude=9, longitude=9, boundary='pad').mean()
+
+    # compute MAX value for both
+    combined = clwc_down + ciwc_down
+    max_cloud_value = float(combined.max().values)
+
+
+    print("CLWC min:", clwc_down.min().values)
+    print("CLWC max:", clwc_down.max().values)
 
     clwc = clwc.sortby('longitude')
     ciwc = ciwc.sortby('longitude')
@@ -33,11 +45,15 @@ def getWeatherData():
     shape = clwc_down.shape
 
     temperature = ds['t'].sel(valid_time=month)
-    temperature_down = temperature.coarsen(latitude=12, longitude=12, boundary='pad').mean()
-    temperature_array = temperature_down.values.astype('float32').flatten().tolist()
+    # Restrict latitude range to mid-latitude or polar for a colder average
+    t_polar = ds['t'].sel(valid_time=month, pressure_level=1, latitude=slice(90, 60))  # e.g. Northern polar cap
+    print("Polar 1 hPa Temp → min:", t_polar.min().values, "max:", t_polar.max().values, "mean:", t_polar.mean().values)
 
-    print("✅ Temp shape:", temperature_down.shape)
-    print("✅ Temp flattened length:", len(temperature_array))
+
+    temperature_down = temperature.coarsen(latitude=4, longitude=4, boundary='pad').mean()
+    temperature_down = temperature_down.sortby('pressure_level', ascending=True)
+
+    temperature_array = temperature_down.transpose('pressure_level', 'latitude', 'longitude').values.astype('float32').flatten().tolist()
 
     # extracting u and v component of wind
 
@@ -59,16 +75,19 @@ def getWeatherData():
     u_vals = u_down.values.astype('float32').flatten().tolist()
     v_vals = v_down.values.astype('float32').flatten().tolist()
 
+    print("Temp shape (after transpose):", temperature_down.transpose('pressure_level', 'latitude', 'longitude').shape)
+
     shape_2d = u_down.shape
     return jsonify({
         "clwc": clwc_array,
         "ciwc": ciwc_array,
         "shape": shape,
         "temperature": temperature_array,
-        "temperature_shape": temperature_down.shape,
+        "temperature_shape": temperature_down.transpose('pressure_level', 'latitude', 'longitude').shape,
         "wind_u": u_vals,
         "wind_v": v_vals,
-        "wind_shape": shape_2d
+        "wind_shape": shape_2d,
+        "max_cloud_value": max_cloud_value,
     }) # Jsonify internally handles conversion of common types like datetime objects automatically
 
 
