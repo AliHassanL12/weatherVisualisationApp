@@ -5,7 +5,7 @@ import { createEarth } from './earth';
 import { setupScene } from './scene'; 
 import { createSphericalSlice, createTempSlice } from './spherical-slice.js';
 import { create3DTextureFromData } from './texture-utils';
-import { setupMonthListeners, setupSliceSlider, trackMouse } from './dom.js';
+import { setupMonthListeners, setupSliceSlider, trackMouse, setUIVisibility } from './dom.js';
 
 let sphericalSliceRef = null;
 let sphericalMaterialRef = null;
@@ -343,6 +343,7 @@ function applyTemperatureTexture(texture, shape, index) {
 
 function applyVisualizationMode(index) {
   const mode = document.getElementById('modeSelect').value;
+  setUIVisibility(mode);
   const data = monthTextures[index];
 
   if (cloudMesh) {
@@ -484,7 +485,7 @@ function createSphericalCloudSlice(texture, shape, maxValue) {
   sphericalSliceRef = sphere;
   sphericalMaterialRef = material;
   scene.add(sphericalSliceRef);
-  setupSliceSlider(material, 'uPressureIndex');
+  setupSliceSlider(material, 'uPressureIndex', 'cloudSlice');
 }
 
 function createSphericalTempSlice(texture, shape) {
@@ -492,7 +493,7 @@ function createSphericalTempSlice(texture, shape) {
   sphericalSliceRef = sphere;
   sphericalMaterialRef = material;
   scene.add(sphericalSliceRef);
-  setupSliceSlider(material, 'uPressureIndex');
+  setupSliceSlider(material, 'uPressureIndex', 'cloudSlice');
 }
 
 

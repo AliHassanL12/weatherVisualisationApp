@@ -19,7 +19,7 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
     return () => currentIndex;
   }
   
-  function setupSliceSlider(material, uniformName = 'u_sliceZ') {
+  function setupSliceSlider(material, uniformName = 'u_sliceZ', mode) {
     const slider = document.getElementById('sliceSlider');
     const toggle = document.getElementById('horizontalToggle');
     const metricDisplay = document.getElementById('metricDisplay');
@@ -35,7 +35,11 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
       const zIndex = Math.floor(sliceValue * (pressureLevels.length - 1));
       const pressure = pressureLevels[zIndex];
       const direction = isHorizontal ? "Horizontal" : "Vertical";
-      metricDisplay.innerText = `Slice: ${direction} | Pressure: ${pressure} hPa`;
+      if (mode === 'cloudSlice') {
+        metricDisplay.innerText = `Pressure: ${pressure} hPa`;
+      } else {
+        metricDisplay.innerText = `Slice: ${direction} | Pressure: ${pressure} hPa`;
+      }
     }
   
     toggle.addEventListener('change', () => {
@@ -110,9 +114,20 @@ function trackMouse(raycaster, camera, getMeshAndMode, getTextures, tooltipEleme
     }
 });
 }
-  
+
+function setUIVisibility(mode) {
+  const legend = document.getElementById('legend');
+  const horizontalToggle = document.getElementById('horizontalToggle');
+  const toggleLabel = horizontalToggle?.parentElement;
+
+  const shouldShowWindUI = mode === 'wind';
+  const shouldShowHorizontal = mode === 'cloudSlice' || mode === 'tempSlice';
+
+  legend.style.display = shouldShowWindUI ? 'block' : 'none';
+  toggleLabel.style.display = shouldShowHorizontal ? 'inline-block' : 'none';
+}
   
 
 
-  export { setupMonthListeners, setupSliceSlider, trackMouse };
+  export { setupMonthListeners, setupSliceSlider, trackMouse, setUIVisibility };
   
