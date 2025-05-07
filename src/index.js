@@ -5,7 +5,11 @@ import { createEarth } from './earth';
 import { setupScene } from './scene'; 
 import { createSphericalSlice, createTempSlice } from './spherical-slice.js';
 import { create3DTextureFromData } from './texture-utils';
-import { setupMonthListeners, setupSliceSlider, trackMouse, setUIVisibility } from './dom.js';
+import { setupMonthListeners, setupSliceSlider, trackMouse, setUIVisibility, updateLegend, setStatsCSS } from './dom.js';
+import Stats from 'stats.js';
+
+const stats = new Stats();
+setStatsCSS(stats);
 
 let sphericalSliceRef = null;
 let sphericalMaterialRef = null;
@@ -70,7 +74,7 @@ function loadMonth(index) {
 
   fetch(`http://127.0.0.1:5001/getWeatherData?month=${month}`)
     .then(res => res.json())
-    .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape, max_cloud_value }) => {
+    .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape, max_cloud_value, min_temps, max_temps }) => {
       const combined = clwc.map((v, i) => v + ciwc[i]);
       const cloudTexture3D = create3DTextureFromData(combined, shape);
 
@@ -79,6 +83,8 @@ function loadMonth(index) {
       monthTextures[index] = {
         texture: cloudTexture3D,
         tempTexture: tempTexture3D,
+        minTemps: min_temps,
+        maxTemps: max_temps,
         shape,
         wind_u,
         wind_v,
@@ -228,7 +234,7 @@ void main() {
     transparent: true,
     depthWrite: false,
   });
-  setupSliceSlider(cloudMaterial);
+  setupSliceSlider(cloudMaterial, 'u_sliceZ', 'cloudSlice');
 
   cloudMesh = new THREE.Mesh(cloudBox, cloudMaterial);
   scene.add(cloudMesh);
@@ -333,7 +339,7 @@ function applyTemperatureTexture(texture, shape, index) {
     blending: THREE.NormalBlending
   });
 
-  setupSliceSlider(tempMaterial);
+  setupSliceSlider(tempMaterial, 'u_sliceZ', 'tempSlice');
 
   cloudMesh = new THREE.Mesh(tempBox, tempMaterial);
   scene.add(cloudMesh);
@@ -368,7 +374,7 @@ function applyVisualizationMode(index) {
     renderWindVectors(data.wind_u, data.wind_v, data.wind_shape);
     windGroup.visible = true;
   } else if (mode === 'tempSlice') {
-    createSphericalTempSlice(data.tempTexture, data.shape);
+    createSphericalTempSlice(data.tempTexture, data.shape, data.minTemps, data.maxTemps);
   }
 }
 
@@ -488,12 +494,13 @@ function createSphericalCloudSlice(texture, shape, maxValue) {
   setupSliceSlider(material, 'uPressureIndex', 'cloudSlice');
 }
 
-function createSphericalTempSlice(texture, shape) {
-  const { sphere, material } = createTempSlice(texture, shape);
+function createSphericalTempSlice(texture, shape, minTemps, maxTemps) {
+  const { sphere, material } = createTempSlice(texture, shape, 0, minTemps, maxTemps);
   sphericalSliceRef = sphere;
   sphericalMaterialRef = material;
   scene.add(sphericalSliceRef);
-  setupSliceSlider(material, 'uPressureIndex', 'cloudSlice');
+  updateLegend(minTemps[0], maxTemps[0]);
+  setupSliceSlider(material, 'uPressureIndex', 'tempSlice');
 }
 
 
@@ -502,8 +509,10 @@ loadMonth(currentMonthIndex);
 
 // Animate scene
 function animate() {
-  requestAnimationFrame(animate);
+  stats.begin();
   renderer.render(scene, camera);
+  stats.end();
+  requestAnimationFrame(animate);
 }
 
 trackMouse(

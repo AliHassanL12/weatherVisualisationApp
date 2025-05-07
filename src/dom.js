@@ -30,6 +30,11 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
       3, 2, 1
     ];
 
+    if (mode === 'cloudSlice' && material?.uniforms?.u_horizontalSlice) {
+      material.uniforms.u_horizontalSlice.value = false;
+      toggle.checked = false; 
+    }
+
   
     function updateMetricsDisplay(sliceValue, isHorizontal) {
       const zIndex = Math.floor(sliceValue * (pressureLevels.length - 1));
@@ -58,6 +63,11 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
       if (material?.uniforms?.uPressureIndex) {
         const pressureIndex = Math.floor(value * (pressureLevels.length - 1));
         material.uniforms.uPressureIndex.value = pressureIndex;
+        if (mode === 'tempSlice') {
+          const minT = material.uniforms.uMinTemps.value[pressureIndex];
+          const maxT = material.uniforms.uMaxTemps.value[pressureIndex];
+          updateLegend(minT, maxT);
+        }
       }
       updateMetricsDisplay(value, toggle.checked);
     });
@@ -117,17 +127,49 @@ function trackMouse(raycaster, camera, getMeshAndMode, getTextures, tooltipEleme
 
 function setUIVisibility(mode) {
   const legend = document.getElementById('legend');
+  const windLegend = document.getElementById('wind-legend');
+  const tempLegend = document.getElementById('temp-legend');
   const horizontalToggle = document.getElementById('horizontalToggle');
   const toggleLabel = horizontalToggle?.parentElement;
 
-  const shouldShowWindUI = mode === 'wind';
-  const shouldShowHorizontal = mode === 'cloudSlice' || mode === 'tempSlice';
+  const showWind = mode === 'wind';
+  const showTemp = mode === 'tempSlice';
 
-  legend.style.display = shouldShowWindUI ? 'block' : 'none';
-  toggleLabel.style.display = shouldShowHorizontal ? 'inline-block' : 'none';
+  if (legend) legend.style.display = showWind || showTemp ? 'block' : 'none';
+  if (windLegend) windLegend.style.display = showWind ? 'block' : 'none';
+  if (tempLegend) tempLegend.style.display = showTemp ? 'block' : 'none';
+  if (toggleLabel) toggleLabel.style.display = (mode === 'cloudSlice' || mode === 'tempSlice') ? 'inline-block' : 'none';
 }
-  
+
+function updateLegend(minTemp, maxTemp) {
+  const canvas = document.getElementById('color-legend');
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+
+  gradient.addColorStop(0.0, '#0033ff'); // Blue
+  gradient.addColorStop(0.5, '#ffffff'); // White
+  gradient.addColorStop(1.0, '#ff0000'); // Red
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  document.getElementById('legend-min').textContent = `${minTemp.toFixed(1)}K`;
+  document.getElementById('legend-mid').textContent = `${((minTemp + maxTemp) / 2).toFixed(1)}K`;
+  document.getElementById('legend-max').textContent = `${maxTemp.toFixed(1)}K`;
+
+  document.getElementById('legend').style.display = 'block';
+}
+
+function setStatsCSS(stats) {
+  document.body.appendChild(stats.dom);
+  stats.dom.style.position = 'absolute';
+  stats.dom.style.top = '0px';
+  stats.dom.style.right = '0px';
+  stats.dom.style.left = 'auto';
+}
 
 
-  export { setupMonthListeners, setupSliceSlider, trackMouse, setUIVisibility };
+
+
+  export { setupMonthListeners, setupSliceSlider, trackMouse, setUIVisibility, updateLegend, setStatsCSS };
   

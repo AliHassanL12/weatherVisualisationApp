@@ -31,15 +31,27 @@
         </label>
         <div id="metricDisplay" style="margin-top: 8px;"></div>
 
-        <div id="legend">
-            <div class="legend-label">Wind Speed</div>
-            <div class="legend-bar"></div>
-            <div class="legend-range">
+        <div id="legend" style="position: absolute; right: 50px; background: black; padding: 5px; border-radius: 8px;  z-index: 40; ">
+            <div id="wind-legend" style="display: none;">
+              <div class="legend-label">Wind Speed</div>
+              <div class="legend-bar" style="height: 10px; background: linear-gradient(to right, blue, green, red);"></div>
+              <div class="legend-range" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                 <span>low</span>
                 <span>med</span>
                 <span>high</span>
+              </div>
             </div>
-        </div>
+          
+            <div id="temp-legend" style="display: none;">
+              <canvas id="color-legend" width="150" height="10"></canvas>
+              <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                <span id="legend-min">min</span>
+                <span id="legend-mid">mid</span>
+                <span id="legend-max">max</span>
+              </div>
+            </div>
+          </div>
+          
 
         <div id="tooltip"></div>
     </div>
