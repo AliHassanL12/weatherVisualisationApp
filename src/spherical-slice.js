@@ -60,8 +60,8 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
             uTexture3D: {value: data3DTexture},
             uPressureIndex: { value: initialPressureIndex},
             uTextureShape: { value: new THREE.Vector3(...textureShape)},
-            uMinTemps: { value: new Float32Array(minTemps) },
-            uMaxTemps: { value: new Float32Array(maxTemps) },
+            uGlobalMinT: { value: 0.0 },
+            uGlobalMaxT: { value: 0.0 },
         },
         vertexShader:`
         varying vec3 vPosition;
@@ -76,36 +76,31 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
         uniform float uPressureIndex;
         uniform vec3 uTextureShape;
         varying vec3 vPosition;
-        uniform float uMinTemps[37];
-        uniform float uMaxTemps[37];
+        uniform float uGlobalMinT;
+        uniform float uGlobalMaxT;
 
-        
-        vec3 temperatureToColor(float t, float minT, float maxT) {
-            t = clamp((t - minT) / (maxT - minT), 0.0, 1.0);
-            if (t < 0.5) {
-                return mix(vec3(0.0, 0.2, 1.0), vec3(1.0), t * 2.0);  // Blue → White
+        vec3 temperatureToColor(float tNorm) {
+            if (tNorm < 0.5) {
+            return mix(vec3(0.0, 0.2, 1.0), vec3(1.0), tNorm * 2.0);
             } else {
-                return mix(vec3(1.0), vec3(1.0, 0.0, 0.0), (t - 0.5) * 2.0);  // White → Red
-            }  
+            return mix(vec3(1.0), vec3(1.0, 0.0, 0.0), (tNorm - 0.5) * 2.0);
+            }
         }
-
 
         void main() {
             int level = int(uPressureIndex + 0.5);
-            float minT = uMinTemps[level];
-            float maxT = uMaxTemps[level];
             float lat = asin(vPosition.y);
             float lon = atan(vPosition.z, vPosition.x);
-            float u = (lon + 3.1415926) / (2.0 * 3.1415926);
-            float v = (lat + 3.1415926 / 2.0) / 3.1415926;
-            float x = u;
-            float y = v;
-            float z = (uTextureShape.x - 1.0 - uPressureIndex) / (uTextureShape.x - 1.0);
-            vec3 texCoord = vec3(z, y, x);
-            float value = texture(uTexture3D, texCoord).r;
-            vec3 color = temperatureToColor(value, minT, maxT);
+            float u   = (lon + 3.1415926) / (2.0 * 3.1415926);
+            float v   = (lat + 3.1415926/2.0) / 3.1415926;
+            float z   = uPressureIndex / (uTextureShape.x - 1.0);
+            vec3 texCoord = vec3(z, v, u);
+            float rawT = texture(uTexture3D, texCoord).r;
+
+            float tNorm = clamp((rawT - uGlobalMinT)/(uGlobalMaxT - uGlobalMinT), 0.0, 1.0);
+            vec3 color = temperatureToColor(tNorm);
             gl_FragColor = vec4(color, 0.6);
-            }
+    }
         `,
         side: THREE.FrontSide,
         depthWrite: false,

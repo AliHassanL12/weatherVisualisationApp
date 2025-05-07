@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { update } from 'three/examples/jsm/libs/tween.module.js';
 
 function setupMonthListeners(loadMonthFn, monthsArrayRef) {
     const nextButton = document.getElementById('nextMonth');
@@ -35,7 +36,10 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
       toggle.checked = false; 
     }
 
-  
+    if (!material.uniforms.u_horizontalSlice) {
+      document.getElementById('horizontalToggle').parentElement.style.display = 'none';
+    }
+
     function updateMetricsDisplay(sliceValue, isHorizontal) {
       const zIndex = Math.floor(sliceValue * (pressureLevels.length - 1));
       const pressure = pressureLevels[zIndex];
@@ -64,9 +68,7 @@ function setupMonthListeners(loadMonthFn, monthsArrayRef) {
         const pressureIndex = Math.floor(value * (pressureLevels.length - 1));
         material.uniforms.uPressureIndex.value = pressureIndex;
         if (mode === 'tempSlice') {
-          const minT = material.uniforms.uMinTemps.value[pressureIndex];
-          const maxT = material.uniforms.uMaxTemps.value[pressureIndex];
-          updateLegend(minT, maxT);
+          updateLegend(material.uniforms.uGlobalMinT.value, material.uniforms.uGlobalMaxT.value)
         }
       }
       updateMetricsDisplay(value, toggle.checked);

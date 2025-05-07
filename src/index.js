@@ -495,11 +495,18 @@ function createSphericalCloudSlice(texture, shape, maxValue) {
 }
 
 function createSphericalTempSlice(texture, shape, minTemps, maxTemps) {
+  const globalMinT = Math.min(...minTemps);
+  const globalMaxT = Math.max(...maxTemps);
+
   const { sphere, material } = createTempSlice(texture, shape, 0, minTemps, maxTemps);
   sphericalSliceRef = sphere;
   sphericalMaterialRef = material;
   scene.add(sphericalSliceRef);
-  updateLegend(minTemps[0], maxTemps[0]);
+
+  material.uniforms.uGlobalMinT = { value: globalMinT };
+  material.uniforms.uGlobalMaxT = { value: globalMaxT };
+
+  updateLegend(globalMinT, globalMaxT);
   setupSliceSlider(material, 'uPressureIndex', 'tempSlice');
 }
 
