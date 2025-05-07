@@ -62,6 +62,7 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
             uTextureShape: { value: new THREE.Vector3(...textureShape)},
             uGlobalMinT: { value: 0.0 },
             uGlobalMaxT: { value: 0.0 },
+            uBandWidth: { value: 5.0 },
         },
         vertexShader:`
         varying vec3 vPosition;
@@ -72,12 +73,16 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
         `,
         fragmentShader: `
         precision highp float;
+        precision highp sampler3D;
+
         uniform sampler3D uTexture3D;
         uniform float uPressureIndex;
         uniform vec3 uTextureShape;
         varying vec3 vPosition;
+
         uniform float uGlobalMinT;
         uniform float uGlobalMaxT;
+        uniform float uBandWidth;
 
         vec3 temperatureToColor(float tNorm) {
             if (tNorm < 0.5) {
@@ -89,16 +94,20 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
 
         void main() {
             int level = int(uPressureIndex + 0.5);
+
             float lat = asin(vPosition.y);
             float lon = atan(vPosition.z, vPosition.x);
             float u   = (lon + 3.1415926) / (2.0 * 3.1415926);
             float v   = (lat + 3.1415926/2.0) / 3.1415926;
             float z   = uPressureIndex / (uTextureShape.x - 1.0);
             vec3 texCoord = vec3(z, v, u);
-            float rawT = texture(uTexture3D, texCoord).r;
 
-            float tNorm = clamp((rawT - uGlobalMinT)/(uGlobalMaxT - uGlobalMinT), 0.0, 1.0);
-            vec3 color = temperatureToColor(tNorm);
+            float rawT = texture(uTexture3D, texCoord).r;
+            float bandIdx = floor((rawT - uGlobalMinT) / uBandWidth);
+            float bandsTot = ceil((uGlobalMaxT - uGlobalMinT) / uBandWidth);
+            float tNormBand = clamp(bandIdx / bandsTot, 0.0, 1.0);
+
+            vec3 color = temperatureToColor(tNormBand);
             gl_FragColor = vec4(color, 0.6);
     }
         `,
