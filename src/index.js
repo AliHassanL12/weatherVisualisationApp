@@ -12,6 +12,9 @@ import Stats from 'stats.js';
 const stats = new Stats();
 setStatsCSS(stats);
 
+
+let loadStartTime = 0;
+let heapBefore = 0;
 let sphericalSliceRef = null;
 let sphericalMaterialRef = null;
 
@@ -72,7 +75,16 @@ function loadMonth(index) {
   }
 
   const month = months[index].value;
+  
+  if (performance.memory) {
+    heapBefore = performance.memory.usedJSHeapSize;
+    console.log(
+      `[${months[index].label}] Heap before: ${(heapBefore/1024/1024).toFixed(2)} MB`
+        );
+      }
+    
 
+  loadStartTime = performance.now();
   fetch(`http://127.0.0.1:5001/getWeatherData?month=${month}`)
     .then(res => res.json())
     .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape, max_cloud_value, min_temps, max_temps }) => {
@@ -94,6 +106,16 @@ function loadMonth(index) {
       };
       applyVisualizationMode(index);
 
+      const loadTime = (performance.now() - loadStartTime).toFixed(1);
+      console.log(`[${months[index].label}] Load time: ${loadTime} ms`);
+
+      if (performance.memory) {
+        const heapAfter = performance.memory.usedJSHeapSize;
+        const usedMB   = (heapAfter/1024/1024).toFixed(2);
+        const deltaMB  = ((heapAfter - heapBefore)/1024/1024).toFixed(2);
+        console.log(`[${months[index].label}] Heap after:  ${usedMB} MB`);
+        console.log(`[${months[index].label}] Δ Heap: ${deltaMB} MB`);
+      }
       if (index === 0) {
         for (let i = 1; i < months.length; i++) {
           const preloadMonth = months[i].value;
