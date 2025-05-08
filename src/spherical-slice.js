@@ -62,7 +62,7 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
             uTextureShape: { value: new THREE.Vector3(...textureShape)},
             uGlobalMinT: { value: 0.0 },
             uGlobalMaxT: { value: 0.0 },
-            uBandWidth: { value: 1.0 },
+            uBandWidth: { value: 5.0 },
         },
         vertexShader:`
         varying vec3 vPosition;
@@ -104,9 +104,10 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
         // sample raw temperature
         float rawT = texture(uTexture3D, texCoord).r;
 
-        float tNorm = (rawT - sliceMinT) / (sliceMaxT - sliceMinT);
-        tNorm = clamp(tNorm, 0.0, 1.0);
-        vec3 color = temperatureToColor(tNorm);
+        float bandIdx = floor((rawT - uGlobalMinT) / uBandWidth);
+        float bandsTot = ceil((uGlobalMaxT - uGlobalMinT) / uBandWidth);
+        float tNormBand = clamp(bandIdx / (bandsTot - 1.0), 0.0, 1.0);
+        vec3 color = temperatureToColor(tNormBand);
         gl_FragColor = vec4(color, 0.6);
     }
         `,
