@@ -17,6 +17,8 @@ let loadStartTime = 0;
 let heapBefore = 0;
 let sphericalSliceRef = null;
 let sphericalMaterialRef = null;
+let tempSliceRef = null;
+let tempMaterialRef = null;
 
 const tooltip = document.getElementById('tooltip');
 const raycaster = new THREE.Raycaster();
@@ -280,6 +282,11 @@ function applyVisualizationMode(index) {
     sphericalSliceRef = null;
     sphericalMaterialRef = null;
   }
+  if (tempSliceRef) {
+    scene.remove(tempSliceRef);
+    tempSliceRef = null;
+    tempMaterialRef = null;
+  }
   windGroup.clear();
   windGroup.visible = false;
   if (mode === 'clouds') {
@@ -429,6 +436,8 @@ function createSphericalTempSlice(texture, shape, minTemps, maxTemps) {
 
   setupSliceSlider(material, 'uPressureIndex', 'tempSlice');
   updateLegend(globalMinT, globalMaxT);
+  tempSliceRef = sphere;
+  tempMaterialRef = material;
   return sphere;
 }
 
