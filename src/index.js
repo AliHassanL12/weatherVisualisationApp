@@ -6,6 +6,7 @@ import { setupScene } from './scene';
 import { createSphericalSlice, createTempSlice } from './spherical-slice.js';
 import { create3DTextureFromData } from './texture-utils';
 import { setupMonthListeners, setupSliceSlider, trackMouse, setUIVisibility, updateLegend, setStatsCSS } from './dom.js';
+import { benchmarkJSON, benchmarkBinary } from './benchmark-test.js';
 import Stats from 'stats.js';
 
 const stats = new Stats();
@@ -393,15 +394,15 @@ function createSphericalTempSlice(texture, shape, minTemps, maxTemps) {
   const globalMaxT = Math.max(...maxTemps);
 
   const { sphere, material } = createTempSlice(texture, shape, 0, minTemps, maxTemps);
-  sphericalSliceRef = sphere;
-  sphericalMaterialRef = material;
-  scene.add(sphericalSliceRef);
 
-  material.uniforms.uGlobalMinT = { value: globalMinT };
-  material.uniforms.uGlobalMaxT = { value: globalMaxT };
+  material.uniforms.uGlobalMinT.value = globalMinT;
+  material.uniforms.uGlobalMaxT.value = globalMaxT;
 
-  updateLegend(globalMinT, globalMaxT);
+  scene.add(sphere);
+
   setupSliceSlider(material, 'uPressureIndex', 'tempSlice');
+  updateLegend(globalMinT, globalMaxT);
+  return sphere;
 }
 
 
