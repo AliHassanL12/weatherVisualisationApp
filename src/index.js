@@ -36,8 +36,12 @@ scene.add(directionalLight);
 
 // Create Earth and add to scene
 const textureLoader = new THREE.TextureLoader();
-const earthGroup = createEarth(textureLoader);
+const earthGroup = createEarth(textureLoader); 
 scene.add(earthGroup);
+
+earthGroup.traverse(o => {
+  if (o.isMesh) o.renderOrder = 0;
+});
 
 // Orbit Controls
 new OrbitControls(camera, renderer.domElement);
@@ -74,7 +78,7 @@ function loadMonth(index) {
   currentMonthIndex = index;
 
   document.getElementById('month-label').innerText = months[index].label;
-  
+
   if (monthTextures[index]) {
     applyVisualizationMode(index);
     return;
@@ -95,6 +99,7 @@ function loadMonth(index) {
     .then(res => res.json())
     .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape, max_cloud_value, min_temps, max_temps }) => {
       const combined = clwc.map((v, i) => v + ciwc[i]);
+
       const cloudTexture3D = create3DTextureFromData(combined, shape);
 
       const tempTexture3D = create3DTextureFromData(temperature, temperature_shape);
@@ -127,13 +132,15 @@ function loadMonth(index) {
           const preloadMonth = months[i].value;
           fetch(`http://127.0.0.1:5001/getWeatherData?month=${preloadMonth}`)
             .then(res => res.json())
-            .then(({ clwc, ciwc, shape, max_cloud_value }) => {
+            .then(({ clwc, ciwc, shape, max_cloud_value, minTemps, maxTemps }) => {
               const combined = clwc.map((v, j) => v + ciwc[j]);
               const texture = create3DTextureFromData(combined, shape);
               monthTextures[i] = { 
                 texture, 
                 shape,
-                maxCloudValue: max_cloud_value
+                maxCloudValue: max_cloud_value,
+                minTemps,
+                maxTemps
                };
             });
         }
@@ -274,6 +281,7 @@ void main() {
 
   document.getElementById('month-label').innerText = months[index].label;
 }
+
 
 
 function applyVisualizationMode(index) {
@@ -432,6 +440,14 @@ function createSphericalCloudSlice(texture, shape, maxValue) {
 }
 
 function createSphericalTempSlice(texture, shape, minTemps, maxTemps) {
+
+  // remove old temp slice
+  if (tempSliceRef) {
+    scene.remove(tempSliceRef);
+    tempSliceRef = null;
+    tempMaterialRef = null;
+  }
+
   const globalMinT = Math.min(...minTemps);
   const globalMaxT = Math.max(...maxTemps);
 
