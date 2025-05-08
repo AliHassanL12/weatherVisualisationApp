@@ -71,6 +71,10 @@ const monthTextures = {};
 let cloudMesh;
 
 function loadMonth(index) {
+  currentMonthIndex = index;
+
+  document.getElementById('month-label').innerText = months[index].label;
+  
   if (monthTextures[index]) {
     applyVisualizationMode(index);
     return;
@@ -123,10 +127,14 @@ function loadMonth(index) {
           const preloadMonth = months[i].value;
           fetch(`http://127.0.0.1:5001/getWeatherData?month=${preloadMonth}`)
             .then(res => res.json())
-            .then(({ clwc, ciwc, shape }) => {
+            .then(({ clwc, ciwc, shape, max_cloud_value }) => {
               const combined = clwc.map((v, j) => v + ciwc[j]);
               const texture = create3DTextureFromData(combined, shape);
-              monthTextures[i] = { texture, shape };
+              monthTextures[i] = { 
+                texture, 
+                shape,
+                maxCloudValue: max_cloud_value
+               };
             });
         }
       }
