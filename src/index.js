@@ -70,7 +70,7 @@ let cloudMesh;
 
 function loadMonth(index) {
   if (monthTextures[index]) {
-    applyCloudTexture(monthTextures[index].texture, monthTextures[index].shape, index);
+    applyVisualizationMode(index);
     return;
   }
 
@@ -404,6 +404,11 @@ function renderWindVectors(wind_u, wind_v, shape) {
 }
 
 function createSphericalCloudSlice(texture, shape, maxValue) {
+  if (sphericalSliceRef) {
+    scene.remove(sphericalSliceRef);
+    sphericalSliceRef = null;
+    sphericalMaterialRef = null;
+  }
   const { sphere, material } = createSphericalSlice(texture, shape, maxValue);
   sphericalSliceRef = sphere;
   sphericalMaterialRef = material;
