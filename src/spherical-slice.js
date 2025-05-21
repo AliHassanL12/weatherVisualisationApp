@@ -42,7 +42,7 @@ function createSphericalSlice(data3DTexture, textureShape, maxCloudValue, initia
             }
         `,
         side: THREE.DoubleSide,
-        depthWrite: false,
+        depthWrite: true,
         blending: THREE.AdditiveBlending,
     });
 
@@ -112,7 +112,7 @@ function createTempSlice(data3DTexture, textureShape, initialPressureIndex = 0, 
     }
         `,
         side: THREE.FrontSide,
-        depthWrite: false,
+        depthWrite: true,
         blending: THREE.NormalBlending,
     });
 

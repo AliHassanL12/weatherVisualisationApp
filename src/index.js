@@ -132,15 +132,20 @@ function loadMonth(index) {
           const preloadMonth = months[i].value;
           fetch(`http://127.0.0.1:5001/getWeatherData?month=${preloadMonth}`)
             .then(res => res.json())
-            .then(({ clwc, ciwc, shape, max_cloud_value, minTemps, maxTemps }) => {
+            .then(({ clwc, ciwc, shape, temperature, temperature_shape, wind_u, wind_v, wind_shape, max_cloud_value, min_temps, max_temps }) => {
               const combined = clwc.map((v, j) => v + ciwc[j]);
               const texture = create3DTextureFromData(combined, shape);
+              const tempTexture3D = create3DTextureFromData(temperature, temperature_shape);
               monthTextures[i] = { 
-                texture, 
+                texture: texture,
+                tempTexture: tempTexture3D,
+                minTemps: min_temps,
+                maxTemps: max_temps,
                 shape,
-                maxCloudValue: max_cloud_value,
-                minTemps,
-                maxTemps
+                wind_u,
+                wind_v,
+                wind_shape,
+                maxCloudValue: max_cloud_value
                };
             });
         }
@@ -286,6 +291,7 @@ void main() {
 
 function applyVisualizationMode(index) {
   const mode = document.getElementById('modeSelect').value;
+  console.log(mode);
   setUIVisibility(mode);
   const data = monthTextures[index];
 
@@ -303,16 +309,19 @@ function applyVisualizationMode(index) {
     tempSliceRef = null;
     tempMaterialRef = null;
   }
-  windGroup.clear();
-  windGroup.visible = false;
+  if (windGroup) {
+    windGroup.clear();
+    windGroup.visible = false;
+  }
   if (mode === 'clouds') {
     applyCloudTexture(data.texture, data.shape, index);
   } else if (mode === 'cloudSlice') {
     console.log("Texture shape:", data.shape);
     createSphericalCloudSlice(data.texture, data.shape, data.maxCloudValue);
   } else if (mode === 'wind') {
-    renderWindVectors(data.wind_u, data.wind_v, data.wind_shape);
+    windGroup.clear();
     windGroup.visible = true;
+    renderWindVectors(data.wind_u, data.wind_v, data.wind_shape);
   } else if (mode === 'tempSlice') {
     createSphericalTempSlice(data.tempTexture, data.shape, data.minTemps, data.maxTemps);
   }
@@ -340,6 +349,8 @@ function renderWindVectors(wind_u, wind_v, shape) {
   const dummy = new THREE.Object3D();
   const dir = new THREE.Vector3();
   const arrowGeometry = new THREE.CylinderGeometry(0, 0.02, arrowLength, 5, 1);
+  arrowGeometry.translate(0, arrowLength / 2, 0);
+
   
 
   const vertexShader = `
@@ -370,11 +381,11 @@ function renderWindVectors(wind_u, wind_v, shape) {
 
 
   let i = 0;
-  for (let latIdx = 0; latIdx < latCount; latIdx++) {
+  for (let latIdx = 0; latIdx < latCount; latIdx += 3) {
     const lat = 90 - (180 / (latCount - 1)) * latIdx;
     const phi = (90 - lat) * Math.PI / 180;
 
-    for (let lonIdx = 0; lonIdx < lonCount; lonIdx++) {
+    for (let lonIdx = 0; lonIdx < lonCount; lonIdx += 3) {
       const lon = -180 + (360 / (lonCount - 1)) * lonIdx;
       const theta = (lon + 180) * Math.PI / 180;
 
@@ -407,7 +418,10 @@ function renderWindVectors(wind_u, wind_v, shape) {
       .normalize();
 
       dummy.position.copy(origin);
-      dummy.lookAt(origin.clone().add(dir));
+      const up = new THREE.Vector3(0, 1, 0); // cylinder points along Y
+      const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
+      dummy.position.copy(origin);
+      dummy.quaternion.copy(quat);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
 
@@ -417,6 +431,7 @@ function renderWindVectors(wind_u, wind_v, shape) {
       i++;
     }
   }
+  mesh.count = i; 
   mesh.instanceMatrix.needsUpdate = true;
   mesh.geometry.setAttribute(
     'instanceColor',
